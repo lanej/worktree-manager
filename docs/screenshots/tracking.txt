@@ -1,0 +1,20 @@
+$ worktree create --branch task/search --path /tmp/worktree-demo/search
+Task fcfc3f38bc2ca2dc4e579ed62bc7b0cb: active
+Path: /private/tmp/worktree-demo/search
+Branch: task/search
+
+$ worktree backfill /tmp/worktree-demo
+REPOSITORY                              LINKED  ALLOCATED     STATUS
+/private/tmp/worktree-demo/atlas/.git   1       not measured  available
+/private/tmp/worktree-demo/beacon/.git  0       not measured  available
+
+$ worktree status
+REPOSITORY                              LINKED  ALLOCATED  STATUS
+/private/tmp/worktree-demo/atlas/.git   1       8.0 KiB    available
+/private/tmp/worktree-demo/beacon/.git  0       0 B        available
+
+Linked worktrees: 1; allocated: 8.0 KiB; complete: true
+
+TASK                              STATE       PATH
+fcfc3f38bc2ca2dc4e579ed62bc7b0cb  active      /private/tmp/worktree-demo/search
+
