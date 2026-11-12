@@ -113,6 +113,37 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     finally:
         env["PATH"] = previous_path
     git("worktree", "remove", changing)
+    # Protected task checkouts remain safe when an ancestor checkout is pruned.
+    for moved_other_repo in (False, True):
+        outer = root / ("outer-moved" if moved_other_repo else "outer")
+        git("worktree", "add", "-b", outer.name, outer)
+        source = repo
+        if moved_other_repo:
+            source = root / "other-repository"
+            source.mkdir()
+            git("init", "-q", "--initial-branch=main", cwd=source)
+            git("commit", "--allow-empty", "-qm", "initial", cwd=source)
+        initial = root / "before-nesting" if moved_other_repo else outer / "nested"
+        nested_task = call("create", "--branch", "task/" + outer.name, "--path", initial, cwd=source)
+        nested = outer / "nested"
+        if moved_other_repo:
+            git("worktree", "move", "--force", "--force", initial, nested, cwd=source)
+        valuable = nested / "uncommitted"
+        valuable.write_text("retain this active task's work\n")
+        previous_path = env["PATH"]
+        probe.write_text("#!/bin/sh\nexit 0\n")
+        env["PATH"] = str(wrappers) + os.pathsep + previous_path
+        try:
+            report = call("prune", "--worktree", outer, "--force", "--apply")
+            row = next(r for r in report["worktrees"] if r["path"] == str(outer))
+            assert row["reason"] == "active task" and row["outcome"] == "not_attempted", row
+            assert valuable.read_text() == "retain this active task's work\n"
+        finally:
+            env["PATH"] = previous_path
+        call("finish", nested_task["id"])
+        valuable.unlink()
+        git("worktree", "remove", nested, cwd=source)
+        git("worktree", "remove", outer)
     call("limits", "--max-worktrees", "1")
     run(binary, "limits", "--max-worktrees", "off", "--max-bytes", "invalid", ok=False)
     assert git("config", "--local", "--get", "worktree.limit").stdout.strip() == "1"

@@ -287,6 +287,27 @@ func (p *policy) activeAt(path string) (bool, error) {
 		if owner == "" && t.GitDir != "" && gitdir == string(t.GitDir) {
 			return true, nil
 		}
+
+		reports, reportErr := p.taskReports([]task{t})
+		if reportErr != nil {
+			return false, reportErr
+		}
+
+		for _, report := range reports {
+			candidate := t.Path
+			if observed, valid := report["observed_path"].(gitText); valid {
+				candidate = observed
+			}
+
+			nested, pathErr := canonical(string(candidate))
+			if pathErr != nil {
+				return false, pathErr
+			}
+			// rationale: An ancestor removal deletes descendants too; unresolved tasks retain their recorded location conservatively.
+			if nested != path && within(nested, path) {
+				return true, nil
+			}
+		}
 	}
 
 	return false, nil
