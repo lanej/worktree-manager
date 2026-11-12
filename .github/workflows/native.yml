@@ -1,0 +1,55 @@
+name: Native packages
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install native Linux test dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y lsof sqlite3 bsdextrautils
+      - name: Build release executable
+        run: scripts/build-release.sh "$RUNNER_TEMP/packages"
+      - name: Check native installation
+        run: python3 scripts/test-install.py --binary "$RUNNER_TEMP/packages/worktree-$(go env GOOS)-$(go env GOARCH)"
+      - name: Obtain the existing patched Git runtime
+        run: |
+          scripts/fetch-test-git.sh "$RUNNER_TEMP/test-git"
+          echo "WORKTREE_HOOKS_GIT=$RUNNER_TEMP/test-git/runtime/bin/git" >> "$GITHUB_ENV"
+      - name: Check lifecycle, policy and full cleanup parity
+        run: scripts/test.sh
+      - name: Check shell scripts
+        if: runner.os == 'Linux'
+        run: shellcheck scripts/*.sh scripts/install-worktree scripts/cleanup-compat scripts/policy-compat internal/cleanup.sh
+      - name: Check Enterprise Linux 8 execution
+        if: runner.os == 'Linux'
+        run: docker run --rm -v "$RUNNER_TEMP/packages:/packages:ro" rockylinux:8 "/packages/worktree-linux-$(go env GOARCH)" --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worktree-${{ runner.os }}-${{ runner.arch }}
+          path: ${{ runner.temp }}/packages/*
+          if-no-files-found: error
