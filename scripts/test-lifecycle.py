@@ -20,6 +20,8 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     env.update(HOME=str(home), GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
                XDG_STATE_HOME=str(home / "state[1]"), XDG_CACHE_HOME=str(home / "cache"),
                GIT_AUTHOR_DATE="2000-01-01T00:00:00Z", GIT_COMMITTER_DATE="2000-01-01T00:00:00Z")
+    if sys.platform == "darwin":
+        env["LC_ALL"] = "en_US.UTF-8"
     def run(*args, ok=True, cwd=repo):
         result = subprocess.run([str(a) for a in args], cwd=cwd, env=env, capture_output=True, text=True, timeout=180)
         assert (result.returncode == 0) == ok, (args, result.returncode, result.stdout, result.stderr)

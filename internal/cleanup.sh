@@ -866,7 +866,7 @@ inspect_index_flags() {
         CHECK_REASON="index flag check failed"; return 1
     fi
     while IFS= read -r -d '' entry; do
-        if [[ "$entry" == [a-zS]\ * ]]; then
+        if [[ "$entry" == [abcdefghijklmnopqrstuvwxyzS]\ * ]]; then
             [[ "$ACCEPT_DIRTY" -eq 1 ]] || { CHECK_REASON="hidden index flags"; return 1; }
             CHECK_ACCEPTED_DIRTY=1
         fi
