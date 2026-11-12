@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     assert call("finish", created["id"])["state"] == "finished"
     (path / "unfinished").write_text("keep me")
     report = call("prune", "--all")
-    assert next(r for r in report["worktrees"] if r["path"] == str(path))["reason"] == "dirty"
+    assert next(r for r in report["worktrees"] if r["path"] == str(path))["reason"] == "dirty", report
     (path / "unfinished").unlink()
     report = call("prune", "--all", "--apply")
     assert next(r for r in report["worktrees"] if r["path"] == str(path))["outcome"] == "removed"
