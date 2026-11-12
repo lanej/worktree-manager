@@ -1,0 +1,22 @@
+$ worktree limits --max-worktrees 1 --max-bytes 8GiB
+max_worktrees: 1
+max_bytes: 8.0 GiB (8589934592 bytes)
+
+$ worktree limits --global --max-bytes 40GiB
+max_worktrees: disabled
+max_bytes: 40.0 GiB (42949672960 bytes)
+
+$ worktree create --branch task/next --path /tmp/worktree-demo/next
+git-worktree-policy: 1 repository linked worktrees; limit is 1; refusing add
+worktree: configured worktree budget is full
+
+$ worktree prune --all
+Dry-run (pass -y to remove).
+
+REPOSITORY                        BASE  STATUS  REASON       AGE       DISK USAGE  SIZE AGE  CODEX SESSION  PATH
+/private/tmp/worktree-demo/atlas  main  skip    active task  315d 4h      8.0 KiB  fresh     -              /private/tmp/worktree-demo/search
+
+Repositories checked: 2
+Worktrees checked: 1
+Nothing to remove.
+

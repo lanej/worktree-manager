@@ -1,0 +1,160 @@
+{
+  "files": {
+    ".agents/skills/builder/.gitignore": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793"
+    },
+    ".agents/skills/builder/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "d2a5e2772ad5ec38f37d356d8c4f0c87f1a195ab14ad3f360052514c56465b61"
+    },
+    ".agents/skills/builder/references/construction.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "7a3d58c77d3ba9fc09fd0ecba04c82e156fa38c94831124f4d3cf233d4038b90"
+    },
+    ".agents/skills/builder/references/instructions.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "5814d1f2fb1580243584e7832734b1fb2db324428853fcfdea94ca3798877a64"
+    },
+    ".agents/skills/builder/references/standard.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "64548321a54fa902090ed5fb5a3433e1a5650b1200c5f1a77ead8ffcfdaec27b"
+    },
+    ".agents/skills/builder/scripts/check_examples.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "63eafae9a01d8e9b5cf3751b840a6d5a481365e7d24f9f14ad5b97440194f886"
+    },
+    ".agents/skills/builder/scripts/decisions.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "fb1af90e67bb062adb0e578c1469938c9d0f0300fe559db5b609bf0a5a5cf00c"
+    },
+    ".agents/skills/builder/scripts/operations.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "8bb1e09cf8b3bed10388e66a0562a6c757771631f9bf002d58ee31124aa43a3d"
+    },
+    ".agents/skills/builder/scripts/utility.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "59b22ac5adb5d10e943d9402e1ced8b3842b7130018c66368e00958ce1ee3f37"
+    },
+    ".agents/skills/go/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "d8e6b73a17e2473595210ebe9fe98c7ee2fb785fb45f697508928cba342d407e"
+    },
+    ".agents/skills/go/assets/check-go.sh": {
+      "executable": true,
+      "kind": "file",
+      "sha256": "9559687a64611f3f5b1bdbabd81b7eb22038916cb09e58d1564db0a07e44114d"
+    },
+    ".agents/skills/go/assets/go-quality.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "db588c2d045b34c688be315e22c19ffe07f060a15669de81bd5405249abc653f"
+    },
+    ".agents/skills/go/assets/go-quality.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "9e386c902506485110788524382f0a657c92db4239158435395ccb8258a3325d"
+    },
+    ".agents/skills/go/assets/go-quality.yml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "ea91828030970b2a437a9554aaf9014552ad75709a2adb29e8bdc7d093805282"
+    },
+    ".agents/skills/go/assets/golangci.yml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "21f5462c4ad46639adafbc44930c756fbc8354307440f32b589e3a841423d953"
+    },
+    ".agents/skills/go/references/correctness.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "013fd0203e5b4dbf3e375dd22bf6ce379d3790f2417411afcd4e4f6eeb6d5b5b"
+    },
+    ".agents/skills/pr-writer/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "ccf4cda5cc343691c9a4c30336d2233cd41c7039d8da31161be5ff1e532ab74b"
+    },
+    ".agents/skills/pr-writer/references/docs/conventional-pull-requests.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "5f30c464448959821bc7b35c0c7c8020e6a2832912dd4d3bdb4ebc77ae384ba6"
+    },
+    ".agents/skills/pr-writer/references/docs/diagrams-and-charts.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "24a32462feea1a9949d0998138a0dc8e8487ed270f31c49e758f9e2025c0d5bd"
+    },
+    ".agents/skills/pr-writer/references/docs/f-pattern-scanning-quick-reference.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "3981fa0a922432ad03f17eeeec80e7bddb9d0ff3584846be1b4fd214f140aee8"
+    },
+    ".agents/skills/pr-writer/references/docs/f-pattern-scanning.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "918d75b6923de10cf416d66b26d7e27babc4cfb605296d133c3465a069cc1340"
+    },
+    ".agents/skills/pr-writer/references/docs/pull-requests.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "fad5dde0a4abdbc3c38fa4df0ea94ebada7f928a758031f18f32fca82b31698e"
+    },
+    ".agents/skills/pr-writer/references/github-pr-writer.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "d53ba49b0b8b65752620e68d2c9eb2d60b2b9788977eb2fe4fc9a1cf5d003eda"
+    },
+    ".agents/skills/pr-writer/references/pull-request-writer.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "e5f8ef42b839bc4935124bdf5116d19e36400186bfe1f1acfe84f2eed19ca722"
+    },
+    ".github/pull_request_template.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "ac9b8e1f34866031a38fa04c9065615be50f800bb68f9d57b7a3b44b24c6f0dd"
+    },
+    ".github/workflows/go-quality.yml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "ea91828030970b2a437a9554aaf9014552ad75709a2adb29e8bdc7d093805282"
+    },
+    ".go-quality.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "db588c2d045b34c688be315e22c19ffe07f060a15669de81bd5405249abc653f"
+    },
+    ".golangci.yml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "21f5462c4ad46639adafbc44930c756fbc8354307440f32b589e3a841423d953"
+    },
+    "scripts/check-go.sh": {
+      "executable": true,
+      "kind": "file",
+      "sha256": "9559687a64611f3f5b1bdbabd81b7eb22038916cb09e58d1564db0a07e44114d"
+    },
+    "scripts/go-quality.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "9e386c902506485110788524382f0a657c92db4239158435395ccb8258a3325d"
+    }
+  },
+  "go_legacy": null,
+  "go_profile": true,
+  "go_rollout": "strict",
+  "mode": "tracked",
+  "source_revision": "6238b28195137b7e59655fefbdd1b183dd22a577",
+  "version": 1
+}

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec "${WORKTREE_BINARY:?Set WORKTREE_BINARY}" policy "$@"
