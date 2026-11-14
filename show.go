@@ -64,7 +64,7 @@ func show(command string, value any) error {
 
 	switch command {
 	case "create", "finish":
-		if _, err := fmt.Fprintf(os.Stdout, "Task %s: %s\nPath: %s\nBranch: %s\n", printable(object["id"]), printable(object["state"]), printable(object["path"]), printable(object["branch"])); err != nil {
+		if _, err := fmt.Fprintf(os.Stdout, "Task %s: %s\nAgent: %s\nOwner: %s\nPath: %s\nBranch: %s\n", printable(object["id"]), printable(object["state"]), printable(object["agent"]), printable(object["owner_id"]), printable(object["path"]), printable(object["branch"])); err != nil {
 			return err
 		}
 
@@ -133,7 +133,7 @@ func show(command string, value any) error {
 		}
 
 		if tasks, validTasks := object["tasks"].([]any); validTasks && len(tasks) > 0 {
-			if _, err := fmt.Fprintln(os.Stdout, "\nTASK                              STATE       PATH"); err != nil {
+			if _, err := fmt.Fprintln(os.Stdout, "\nTASK                              STATE       AGENT  OWNER  BRANCH  PATH"); err != nil {
 				return err
 			}
 
@@ -148,7 +148,12 @@ func show(command string, value any) error {
 					path = task["observed_path"]
 				}
 
-				if _, err := fmt.Fprintf(os.Stdout, "%s  %-10s  %s\n", printable(task["id"]), printable(task["state"]), printable(path)); err != nil {
+				branch := task["branch"]
+				if task["observation"] == "available" {
+					branch = task["observed_branch"]
+				}
+
+				if _, err := fmt.Fprintf(os.Stdout, "%s  %-10s  %s  %s  %s  %s\n", printable(task["id"]), printable(task["state"]), printable(task["agent"]), printable(task["owner_id"]), printable(branch), printable(path)); err != nil {
 					return err
 				}
 			}

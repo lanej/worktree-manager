@@ -72,7 +72,8 @@ func (p *policy) app(args []string) (int, error) {
 
 Usage: worktree COMMAND [OPTIONS]
 
-  create --branch NAME [--base HEAD] [--path PATH] [--repo PATH] [--json]
+  create [--agent SLUG] [--owner-id ID] [--branch NAME] [--base HEAD]
+         [--path PATH] [--repo PATH] [--json]
   finish TASK_ID|PATH [--json]        Finish protection; never delete
   backfill ROOT... [--json]          Discover existing repositories explicitly
   status [--json]                    Reconcile all known repositories and tasks
@@ -87,6 +88,10 @@ Pruning includes --worktree PATH, -a HOURS, -b BASE, --refresh, --min-size SIZE,
 --accept-unmerged, --accept-recent and --force. Task protection, native locks,
 active processes and unfinished Git operations cannot be overridden by --force.
 Run worktree prune --help for the complete cleanup contract.
+
+Create defaults to <primary>/.worktrees/<agent>-<8-hex> and a matching
+worktree/<agent>-<8-hex> branch. Agent defaults to manual. The destination
+must be ignored; linked checkouts resolve to the same primary repository.
 
 Installed runtime: Git; cleanup also needs Bash, lsof and standard Unix tools.
 Codex session reporting uses optional sqlite3. No Python or Go installation needed.`)

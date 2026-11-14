@@ -9,8 +9,8 @@ Fresh Git worktrees with global inventory, optional count/disk budgets, task pro
 Download the appropriate executable and adjacent SHA256 file from the versioned release, or use the installer:
 
 ```sh
-curl -fLsS https://github.com/lanej/worktree-manager/releases/download/v0.1.0/install-worktree -o /tmp/install-worktree
-sh /tmp/install-worktree 0.1.0
+curl -fLsS https://github.com/lanej/worktree-manager/releases/download/v0.2.0/install-worktree -o /tmp/install-worktree
+sh /tmp/install-worktree 0.2.0
 worktree --version
 ```
 
@@ -20,7 +20,7 @@ The installer places the executable at `~/.local/bin/worktree`, verifies its che
 
 ```sh
 # From an existing repository; the default .worktrees/ destination must be ignored.
-worktree create --branch task/example --json
+worktree create --agent codex --owner-id FULL_LAUNCH_TOKEN --json
 # Use the returned path and task ID. Each request creates a fresh named branch/checkout.
 worktree status
 worktree finish TASK_ID
@@ -28,7 +28,11 @@ worktree prune --all                 # Preview only.
 worktree prune --all --apply         # Recheck and explicitly remove eligible candidates.
 ```
 
-Creation defaults to local `HEAD` and never fetches or resets an existing branch. Use `--base REF`, `--path PATH`, and `--repo PATH` to choose the source or destination. An explicit path is required for bare repositories. The default path is `<primary>/.worktrees/task-<id>`; an existing directory is never reused.
+Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens; it defaults to `manual` for direct use. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+
+No task name is required: omit `--branch` to generate `worktree/<agent>-<8-hex>`, or supply a descriptive fresh branch explicitly. Renaming the branch later preserves the checkout directory and registration identity. `--owner-id` records the full launcher/agent identity when known; native session IDs may be linked by the launcher after startup. Task JSON and status show agent and owner identities; status also distinguishes `observed_branch` and `observed_path` from the original record. Older records without agent metadata remain readable.
+
+Use `--base REF`, `--path PATH`, and `--repo PATH` to choose the source or destination. An explicit path is required for bare repositories. Default destinations must be ignored and cannot redirect through symlinks; there is no temporary-directory fallback. Explicit `--path` remains available for deliberate alternate locations, excluding Git's administrative directories. Agent launchers use the default placement. An existing directory is never reused.
 
 New tasks have a native Git lock and a durable task record. Finishing removes only the task's own lock and changes its lifecycle state; it does not delete the checkout. A manual Git unlock does not mark the task finished. Locks changed by another owner are preserved. Native Git remains authoritative: moving a checkout preserves its task identity, while a later checkout reusing its old path is a separate registration.
 
