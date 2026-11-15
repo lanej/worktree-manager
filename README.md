@@ -101,10 +101,14 @@ Octo Manager can consume task IDs and JSON through the CLI in a future adapter. 
 
 ## Development
 
+The authored `source-code.toml` selects beta assurance for this tool, with strict Go checks and Codex project guidance. `.source-code.json`, `AGENTS.override.md`, the skill packages and check runners are generated from dotfiles' `source-code` tooling. Use `source-code explain --repo .` to inspect desired versus installed policy and `source-code validate --repo .` to validate packages and pins. CI retains its explicit PR-head checkout when the generated Go workflow is refreshed.
+
+The tracked configuration and generated profile travel with manager-created checkouts through Git. A repository using a local/shadow profile must explicitly run `source-code setup --repo CHECKOUT` there; allocation does not copy ignored profiles or execute project setup commands.
+
 Use the Go version in `go.mod` and Python 3.11+ for development checks. Runtime binaries are built with `CGO_ENABLED=0`; the committed Go race checks additionally need a C compiler.
 
 ```sh
-bash scripts/check-go.sh
+python3 scripts/check-source-code.py go
 scripts/test.sh
 scripts/build-release.sh /tmp/worktree-packages
 python3 scripts/test-install.py --binary /tmp/worktree-packages/worktree-PLATFORM-ARCH

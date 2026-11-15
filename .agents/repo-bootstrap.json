@@ -1,5 +1,17 @@
 {
+  "agents": "codex",
+  "detect_languages": true,
   "files": {
+    ".agents/skills/architecture/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "44d3c44a3bc1de2ea9ffe8bb3c715a7f826ff8906834439e632a3f4175dada16"
+    },
+    ".agents/skills/architecture/references/design-lessons.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "f74b92a75745163ef454d489f21060ef268f46024664c9b11a884dc252a98a57"
+    },
     ".agents/skills/builder/.gitignore": {
       "executable": false,
       "kind": "file",
@@ -8,7 +20,7 @@
     ".agents/skills/builder/SKILL.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "d2a5e2772ad5ec38f37d356d8c4f0c87f1a195ab14ad3f360052514c56465b61"
+      "sha256": "442814514417aa91d79ace643f696ed08d0b26c1c6fe1d8cef8b2cc91cc1d2de"
     },
     ".agents/skills/builder/references/construction.md": {
       "executable": false,
@@ -45,15 +57,55 @@
       "kind": "file",
       "sha256": "59b22ac5adb5d10e943d9402e1ced8b3842b7130018c66368e00958ce1ee3f37"
     },
+    ".agents/skills/code-comments/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "1d8976e5f8bbe5fef79658220814c19ac7267f35bfde5e5a4aa77d31b0c11571"
+    },
+    ".agents/skills/code-comments/references/standard.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "6234888789f50f75c82905fcea8e99eb69764fa6265eff15c38ab1fb16b74c5c"
+    },
+    ".agents/skills/data-change-planning/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "a80d2635fbbb45a24b9255c8a2fc231098758a3200cd7c5f1d304b3039d2c6e9"
+    },
+    ".agents/skills/git/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "e165bb52bac5115a2ebb6935b5816b72b09c388ed7f1b255022f41fabebb8ba0"
+    },
+    ".agents/skills/git/references/octo-pr-submission.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "0b93e6fa852459a9e2fb11d50c3cfbc3581cefb13b1b17aa521c26714ffd0f53"
+    },
+    ".agents/skills/git/references/verification-lessons.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "39a6fa5fceed8a8ba736b1ed1eca97acd0fb1da3cbf58ef1de94d567079f6d56"
+    },
+    ".agents/skills/git/references/verification.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "8980c712d794dcd95638ba638b83e60a6eb63e626e1a728f1968f9ecb4361acc"
+    },
+    ".agents/skills/git/references/worktrees.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "e871e04d29708873fc724dd65ee6663dccb4f524e6bcd9f5ab33f124ebe94bba"
+    },
     ".agents/skills/go/SKILL.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "d8e6b73a17e2473595210ebe9fe98c7ee2fb785fb45f697508928cba342d407e"
+      "sha256": "d7df18f6881335d12ed183c4dfba21bd80013649a71ec9b798d7c97f35733567"
     },
     ".agents/skills/go/assets/check-go.sh": {
       "executable": true,
       "kind": "file",
-      "sha256": "9559687a64611f3f5b1bdbabd81b7eb22038916cb09e58d1564db0a07e44114d"
+      "sha256": "8f1f0041f8afefbcfc3e424fa998972ac923cf314ee20ed1153b5d5e64f1b89c"
     },
     ".agents/skills/go/assets/go-quality.json": {
       "executable": false,
@@ -63,7 +115,7 @@
     ".agents/skills/go/assets/go-quality.py": {
       "executable": false,
       "kind": "file",
-      "sha256": "9e386c902506485110788524382f0a657c92db4239158435395ccb8258a3325d"
+      "sha256": "e38d9e1eb90220f47df858f7ec04dbf7e7ff3a05d18f9e19069eee42c0585aa9"
     },
     ".agents/skills/go/assets/go-quality.yml": {
       "executable": false,
@@ -78,12 +130,17 @@
     ".agents/skills/go/references/correctness.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "013fd0203e5b4dbf3e375dd22bf6ce379d3790f2417411afcd4e4f6eeb6d5b5b"
+      "sha256": "5637a11dcc26b6258b2cf416e16dc8df497af264445bcdaa69b028a3cb9fdaf9"
+    },
+    ".agents/skills/library-code-comments/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "2fb6e0caed93d70875c59a1296fea4ff215ea75d35bb33ce09b7665d292f1a78"
     },
     ".agents/skills/pr-writer/SKILL.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "ccf4cda5cc343691c9a4c30336d2233cd41c7039d8da31161be5ff1e532ab74b"
+      "sha256": "45735941d4821e7b64b22d3e3ac351635b975f1b1b9c27186d417dc3cefb819b"
     },
     ".agents/skills/pr-writer/references/docs/conventional-pull-requests.md": {
       "executable": false,
@@ -98,12 +155,12 @@
     ".agents/skills/pr-writer/references/docs/f-pattern-scanning-quick-reference.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "3981fa0a922432ad03f17eeeec80e7bddb9d0ff3584846be1b4fd214f140aee8"
+      "sha256": "0f3f4594265dbe32c72dd2dea0d7d461a69e45fdae79faa9854981b764cafcad"
     },
     ".agents/skills/pr-writer/references/docs/f-pattern-scanning.md": {
       "executable": false,
       "kind": "file",
-      "sha256": "918d75b6923de10cf416d66b26d7e27babc4cfb605296d133c3465a069cc1340"
+      "sha256": "9ce71b24ae5ba07f12b997a2ef5daa4c0a4340d0fd1e24b43e56abd9cd5cb9f3"
     },
     ".agents/skills/pr-writer/references/docs/pull-requests.md": {
       "executable": false,
@@ -120,6 +177,106 @@
       "kind": "file",
       "sha256": "e5f8ef42b839bc4935124bdf5116d19e36400186bfe1f1acfe84f2eed19ca722"
     },
+    ".agents/skills/python/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "47d385c9c1f46b27cbe304d8af1e27787d0d8ba9ae108364b3ef0c1b0c4b22a7"
+    },
+    ".agents/skills/python/assets/check-python.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "9a8d4205e7ce9453f089e69ead3c1fad39b35ba278d63f409067c0a0efccc24c"
+    },
+    ".agents/skills/python/assets/gitignore": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "c3361f2e0d8f72919c59420674aba1a56fbe34d54fd1bc09ef708d4cd42dc309"
+    },
+    ".agents/skills/python/assets/pyproject.toml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "9f46f3e07c3c4f9f1af723a1b3fdea20c788dbf0fa34ca7dbb20dfeb377e3cd8"
+    },
+    ".agents/skills/python/assets/python-quality.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "19f88a6e59941142627e2c6dd112e733f96bb2561db4750b0043e452f0b24c11"
+    },
+    ".agents/skills/python/assets/python-quality.yml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "0368de9d9c04bbeb83a988c4dceeadbdab14317a2f4351d4cdbf06f07c529068"
+    },
+    ".agents/skills/python/assets/ruff.toml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "b31a8598c9ff18dddbbf690b0728623f48b2efa429eb0c932c872038288f54af"
+    },
+    ".agents/skills/python/assets/ty.toml": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "013e14a6bb7a5d7d5fa8867abd2156fa955fcee67b0ca730eb17d85bf1acdbeb"
+    },
+    ".agents/skills/python/assets/uv.lock": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "e595f923451dea87c07dab9b28be646ef9f40985f12515ee5b2df91289151004"
+    },
+    ".agents/skills/python/references/strict-profile.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "7af7f3bdfa3f41f8e1fbebd7a8552cbc7329d6c662ef506a67c4d1ce944f069c"
+    },
+    ".agents/skills/python/references/worktree-lessons.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "41bf166029b0976f8d2f89760ec6dacc57c765115f18198694664f296cee2012"
+    },
+    ".agents/skills/source-code-lifecycle/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "bdf81ec5394e32973c2e88997bb0f09f75502335595ea69219bc418975b84197"
+    },
+    ".agents/skills/source-code-lifecycle/assets/check-source-code.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "5fa8092a4738a401048d422662f323b24daa29001a93f9287f9cb010c66ac7eb"
+    },
+    ".agents/skills/source-code-lifecycle/references/kinds.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "2ed9cd39f7ddb337e020c0fdc7b589dd36fb6a135c4b651c1fe978428a9924ac"
+    },
+    ".agents/skills/source-code-lifecycle/references/languages.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "d33ade91fc4ae19fe3eacc8fd3728cdf28f562f6eb383b867eb711f475807c26"
+    },
+    ".agents/skills/source-code-lifecycle/references/lifecycle.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "3fb85143b8d480174f9f33e7ffc18086c93c97b585601a08af32331decf71a91"
+    },
+    ".agents/skills/source-code-lifecycle/references/stages.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "62d24656487ae95aa3f349fd7f6260af26e3971d19e2b8046e06baee80eb394d"
+    },
+    ".agents/skills/testing/SKILL.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "cebe139c76ea020305d7667d45913e912441b767010beba03534c721e477df66"
+    },
+    ".agents/skills/testing/references/verification-lessons.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "4560332f43ca752d60e6d62c52fba2bda1349e2db77a90e4100d79c36a9216f9"
+    },
+    ".agents/source-code-versions.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "1a32c1d94b9b031c660017cdee866c7d5b3dd3081f7506db333218a0bbb51174"
+    },
     ".github/pull_request_template.md": {
       "executable": false,
       "kind": "file",
@@ -128,7 +285,7 @@
     ".github/workflows/go-quality.yml": {
       "executable": false,
       "kind": "file",
-      "sha256": "ea91828030970b2a437a9554aaf9014552ad75709a2adb29e8bdc7d093805282"
+      "sha256": "5eae5e8701f6f91bbefed3fc09f743146c55e81112332f708fecc05098dfe178"
     },
     ".go-quality.json": {
       "executable": false,
@@ -140,21 +297,66 @@
       "kind": "file",
       "sha256": "21f5462c4ad46639adafbc44930c756fbc8354307440f32b589e3a841423d953"
     },
+    ".source-code.json": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "81bdabbd16848322a835bebed31cd7fdf39f5b31ad7759dbfef53653f76fa50a"
+    },
+    "AGENTS.override.md": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "5911d991d64a4b5b617b3e5d5615943f7fb6cdc1c6757ec8c5a098c2c76edf31"
+    },
     "scripts/check-go.sh": {
       "executable": true,
       "kind": "file",
-      "sha256": "9559687a64611f3f5b1bdbabd81b7eb22038916cb09e58d1564db0a07e44114d"
+      "sha256": "8f1f0041f8afefbcfc3e424fa998972ac923cf314ee20ed1153b5d5e64f1b89c"
+    },
+    "scripts/check-source-code.py": {
+      "executable": false,
+      "kind": "file",
+      "sha256": "5fa8092a4738a401048d422662f323b24daa29001a93f9287f9cb010c66ac7eb"
     },
     "scripts/go-quality.py": {
       "executable": false,
       "kind": "file",
-      "sha256": "9e386c902506485110788524382f0a657c92db4239158435395ccb8258a3325d"
+      "sha256": "e38d9e1eb90220f47df858f7ec04dbf7e7ff3a05d18f9e19069eee42c0585aa9"
     }
   },
   "go_legacy": null,
   "go_profile": true,
   "go_rollout": "strict",
+  "kind": "tool",
   "mode": "tracked",
-  "source_revision": "6238b28195137b7e59655fefbdd1b183dd22a577",
+  "policy_version": "1.0.0",
+  "pr_template": "none",
+  "skill_versions": {
+    "architecture": "1.0.0",
+    "builder": "1.0.1",
+    "code-comments": "1.0.0",
+    "data-change-planning": "1.0.0",
+    "git": "1.0.0",
+    "go": "1.0.1",
+    "library-code-comments": "1.0.0",
+    "pr-writer": "1.0.0",
+    "python": "1.0.0",
+    "source-code-lifecycle": "1.0.0",
+    "testing": "1.0.0"
+  },
+  "skills": [
+    "architecture",
+    "builder",
+    "code-comments",
+    "data-change-planning",
+    "git",
+    "go",
+    "library-code-comments",
+    "pr-writer",
+    "python",
+    "source-code-lifecycle",
+    "testing"
+  ],
+  "source_revision": "b14b8c55ce17a6d6492995de3041dd78d5f9199c",
+  "stage": "beta",
   "version": 1
 }
