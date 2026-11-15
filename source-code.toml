@@ -1,0 +1,18 @@
+schema_version = 1
+stage = "beta"
+kind = "tool"
+mode = "tracked"
+skills = ["builder", "go", "pr-writer"]
+agents = "codex"
+pr_template = "none"
+detect_languages = true
+
+[checks.go]
+enabled = true
+rollout = "strict"
+
+[checks.typescript]
+enabled = false
+
+[checks.python]
+enabled = false
