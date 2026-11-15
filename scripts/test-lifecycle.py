@@ -35,9 +35,61 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     (repo / "tracked").write_text("preserve branches\n")
     git("add", ".")
     git("commit", "-qm", "initial")
-    created = call("create", "--branch", "task/first")
+    before = git("for-each-ref", "--format=%(refname)").stdout
+    for slug in ("../escape", "Codex", "", "a" * 49):
+        failure = run(binary, "create", "--agent", slug, "--json", ok=False)
+        assert json.loads(failure.stdout)["error"]["code"] == "invalid_arguments"
+    (repo / ".gitignore").write_text("node_modules/\n")
+    assert "must be ignored" in run(binary, "create", "--agent", "codex", ok=False).stderr
+    (repo / ".gitignore").write_text(".worktrees/\nnode_modules/\n")
+    outside = root / "outside"
+    outside.mkdir()
+    (repo / ".worktrees").symlink_to(outside, target_is_directory=True)
+    assert "symlink" in run(binary, "create", "--agent", "codex", ok=False).stderr
+    assert not list(outside.iterdir())
+    (repo / ".worktrees").unlink()
+    assert git("for-each-ref", "--format=%(refname)").stdout == before
+    records = home / "state[1]/worktree-manager/tasks"
+    assert not records.exists()
+    git("branch", "worktree")
+    assert "namespace conflicts" in run(binary, "create", "--agent", "codex", ok=False).stderr
+    assert not records.exists()
+    git("branch", "-d", "worktree")
+    created = call("create", "--agent", "codex", "--owner-id", "full-launch-token")
     path = Path(created["path"])
     assert created["state"] == "active" and path.is_dir()
+    assert path == repo / ".worktrees" / ("codex-" + created["id"][:8])
+    assert created["agent"] == "codex" and created["owner_id"] == "full-launch-token"
+    assert created["branch"] == "worktree/" + path.name
+    assert len(created["id"]) == 32
+    human = run(binary, "status").stdout
+    assert "full-launch-token" in human and created["branch"] in human
+    linked = call("create", "--agent", "claude", cwd=path)
+    assert Path(linked["path"]).parent == repo / ".worktrees"
+    assert linked["branch"].startswith("worktree/claude-")
+    call("finish", linked["id"])
+    git("worktree", "remove", linked["path"])
+    legacy = json.loads((records / (linked["id"] + ".json")).read_text())
+    del legacy["agent"]
+    (records / (linked["id"] + ".json")).write_text(json.dumps(legacy))
+    assert next(t for t in call("status")["tasks"] if t["id"] == linked["id"])["state"] == "finished"
+    git("branch", "-m", "task/first", cwd=path)
+    observed = next(t for t in call("status")["tasks"] if t["id"] == created["id"])
+    assert observed["observed_branch"] == "task/first" and observed["observed_path"] == str(path)
+    git("checkout", "--detach", cwd=path)
+    detached = next(t for t in call("status")["tasks"] if t["id"] == created["id"])
+    assert detached["observation"] == "available" and detached["observed_branch"] is None
+    display = next(line for line in run(binary, "status").stdout.splitlines() if line.startswith(created["id"]))
+    assert created["branch"] not in display
+    git("checkout", "task/first", cwd=path)
+    before = git("for-each-ref", "--format=%(refname)").stdout
+    rejected = run(binary, "create", "--branch", "task/first", "--json", ok=False)
+    assert "already exists" in rejected.stderr and rejected.returncode == 2
+    assert json.loads(rejected.stdout)["error"] == {
+        "code": "invalid_arguments", "outcome": "rejected",
+        "message": "allocation rejected: branch already exists; create requires a fresh named branch"}
+    assert "administrative" in run(binary, "create", "--path", repo / ".git/not-a-checkout", ok=False).stderr
+    assert git("for-each-ref", "--format=%(refname)").stdout == before
     native_path = root / "native-tools"
     native_path.mkdir()
     for name in ("awk", "basename", "cat", "column", "cut", "date", "dirname", "du", "find", "git", "head", "id", "lsof", "ls", "mkdir", "mktemp", "mv", "od", "printf", "pwd", "readlink", "rm", "sed", "sleep", "sort", "stat", "tail", "tr", "uname", "wc", "xargs"):

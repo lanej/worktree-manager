@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,6 +26,8 @@ const (
 
 type task struct {
 	ID         string     `json:"id"`
+	Agent      string     `json:"agent,omitempty"`
+	OwnerID    string     `json:"owner_id,omitempty"`
 	Common     gitText    `json:"common_gitdir"`
 	GitDir     gitText    `json:"gitdir"`
 	Path       gitText    `json:"path"`
@@ -321,6 +321,8 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 	args, machine := jsonFlag(args)
 	f := flags("create")
 	branch := f.String("branch", "", "new branch name")
+	agent := f.String("agent", "manual", "agent slug used in the checkout name")
+	ownerID := f.String("owner-id", "", "full allocation or session owner identity")
 	base := f.String("base", "HEAD", "local base revision")
 	destination := f.String("path", "", "new checkout directory")
 
@@ -329,8 +331,12 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 		return 2, err
 	}
 
-	if f.NArg() != 0 || *branch == "" {
-		return 2, errors.New("create requires --branch NAME and accepts no positional arguments")
+	if f.NArg() != 0 {
+		return 2, errors.New("create accepts no positional arguments")
+	}
+
+	if !agentPattern.MatchString(*agent) {
+		return 2, errors.New("agent must be 1-48 lowercase letters, digits or hyphens, starting with a letter or digit")
 	}
 
 	common, err := p.commonAt(*repo)
@@ -344,20 +350,6 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 	}
 
 	defer func() { resultErr = errors.Join(resultErr, unlock()) }()
-
-	if _, err = p.workingGit(*repo, "check-ref-format", "--branch", *branch); err != nil {
-		return 1, err
-	}
-
-	_, branchErr := p.workingGit(*repo, "show-ref", "--verify", "--quiet", "refs/heads/"+*branch)
-	if branchErr == nil {
-		return 2, errors.New("branch already exists; create requires a fresh named branch")
-	}
-
-	var branchExit *exec.ExitError
-	if !errors.As(branchErr, &branchExit) || branchExit.ExitCode() != 1 {
-		return 1, branchErr
-	}
 
 	if _, err = p.workingGit(*repo, "rev-parse", "--verify", "--end-of-options", *base+"^{commit}"); err != nil {
 		return 1, err
@@ -377,12 +369,7 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 		return 1, errBudgetFull
 	}
 
-	random := make([]byte, 16)
-	if _, err = rand.Read(random); err != nil {
-		return 1, err
-	}
-
-	id := hex.EncodeToString(random)
+	options := allocationOptions{repo: *repo, common: common, agent: *agent, branch: *branch, path: *destination}
 
 	if *destination == "" {
 		if len(state.Worktrees) == 0 {
@@ -394,35 +381,26 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 			return 1, errors.New("bare repositories require an explicit --path")
 		}
 
-		*destination = filepath.Join(string(primary), ".worktrees", "task-"+id)
-		if _, err = p.workingGit(string(primary), "check-ignore", "-q", "--no-index", "--", *destination); err != nil {
-			return 1, errors.New("default .worktrees directory must be ignored; add .worktrees/ to .gitignore or choose --path outside the repository")
-		}
+		options.primary = string(primary)
 	}
 
-	path, err := canonical(*destination)
+	allocation, err := p.allocate(options, randomTaskID)
 	if err != nil {
-		return 1, err
-	}
-
-	if within(path, common) {
-		return 1, errors.New("checkout cannot be placed inside Git's administrative directory")
-	}
-
-	if _, err = os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
-		if err == nil {
-			return 1, errors.New("destination already exists; worktrees are never reused")
+		if errors.Is(err, errAllocationRejected) {
+			return 2, err
 		}
 
 		return 1, err
 	}
 
-	t := task{ID: id, Common: gitText(common), Path: gitText(path), Branch: gitText(*branch), State: taskCreating, CreatedAt: time.Now().UTC()}
+	id, path := allocation.id, allocation.path
+
+	t := task{ID: id, Agent: *agent, OwnerID: *ownerID, Common: gitText(common), Path: gitText(path), Branch: gitText(allocation.branch), State: taskCreating, CreatedAt: time.Now().UTC()}
 	if err = saveTask(t); err != nil {
 		return 1, err
 	}
 
-	_, gitErr := p.workingGit(*repo, "worktree", "add", "--lock", "--reason", "worktree-manager:"+id, "-b", *branch, "--", path, *base)
+	_, gitErr := p.workingGit(*repo, "worktree", "add", "--lock", "--reason", "worktree-manager:"+id, "-b", allocation.branch, "--", path, *base)
 	actual, reconcileErr := p.reconcile(common)
 	found := false
 
@@ -621,6 +599,7 @@ func (p *policy) taskReports(tasks []task) ([]map[string]any, error) {
 		}
 
 		row["observed_path"] = nil
+		row["observed_branch"] = nil
 		row["observation"] = "unknown"
 
 		state, inventoryErr := p.inventory(string(t.Common))
@@ -659,6 +638,10 @@ func (p *policy) taskReports(tasks []task) ([]map[string]any, error) {
 
 			if matches {
 				row["observed_path"] = path
+				if branch, named := checkout["branch"].(gitText); named {
+					row["observed_branch"] = gitText(strings.TrimPrefix(string(branch), "refs/heads/"))
+				}
+
 				row["observation"] = "available"
 
 				break
