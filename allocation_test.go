@@ -116,3 +116,51 @@ func TestAllocationExhaustionAndRandomFailure(t *testing.T) {
 		t.Fatalf("lost random-source error: %v", err)
 	}
 }
+
+func TestCreateEnvironmentIdentity(t *testing.T) {
+	for _, test := range []struct {
+		name, threadID, sessionID, agent, ownerID string
+		args                                      []string
+	}{
+		{name: "manual", agent: "manual"},
+		{name: "thread", threadID: "full-thread-id", agent: "codex", ownerID: "full-thread-id"},
+		{name: "session fallback", sessionID: "full-session-id", agent: "codex", ownerID: "full-session-id"},
+		{name: "thread precedence", threadID: "thread", sessionID: "session", agent: "codex", ownerID: "thread"},
+		{name: "explicit owner", threadID: "thread", args: []string{"--owner-id", "launcher"}, agent: "codex", ownerID: "launcher"},
+		{name: "empty owner", threadID: "thread", args: []string{"--owner-id", ""}, agent: "codex"},
+		{name: "explicit agent", threadID: "thread", args: []string{"--agent", "claude"}, agent: "claude"},
+		{name: "explicit manual", threadID: "thread", args: []string{"--agent", "manual"}, agent: "manual"},
+		{name: "explicit codex", threadID: "thread", args: []string{"--agent", "codex"}, agent: "codex", ownerID: "thread"},
+		{name: "explicit pair", threadID: "thread", args: []string{"--agent", "pi", "--owner-id", "pi-owner"}, agent: "pi", ownerID: "pi-owner"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			p, options := allocationFixture(t)
+			t.Setenv("CODEX_THREAD_ID", test.threadID)
+			t.Setenv("CODEX_SESSION_ID", test.sessionID)
+
+			args := append([]string{"--repo", options.repo, "--json"}, test.args...)
+			if status, err := p.create(args); err != nil || status != 0 {
+				t.Fatalf("create: status=%d err=%v", status, err)
+			}
+
+			tasks, err := loadTasks()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(tasks) != 1 {
+				t.Fatalf("expected one persisted task, got %d", len(tasks))
+			}
+
+			created := tasks[0]
+			if created.Agent != test.agent || created.OwnerID != test.ownerID || created.State != taskActive {
+				t.Fatalf("unexpected identity or state: %+v", created)
+			}
+
+			leaf := test.agent + "-" + created.ID[:8]
+			if string(created.Path) != filepath.Join(options.primary, ".worktrees", leaf) || string(created.Branch) != "worktree/"+leaf {
+				t.Fatalf("identity not used in allocation: %+v", created)
+			}
+		})
+	}
+}

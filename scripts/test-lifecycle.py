@@ -17,6 +17,8 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     repo = root / "repo"
     repo.mkdir()
     env = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "XDG_", "WORKTREE_"))}
+    env.pop("CODEX_THREAD_ID", None)
+    env.pop("CODEX_SESSION_ID", None)
     env.update(HOME=str(home), GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
                XDG_STATE_HOME=str(home / "state[1]"), XDG_CACHE_HOME=str(home / "cache"),
                GIT_AUTHOR_DATE="2000-01-01T00:00:00Z", GIT_COMMITTER_DATE="2000-01-01T00:00:00Z")
@@ -55,6 +57,52 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     assert "namespace conflicts" in run(binary, "create", "--agent", "codex", ok=False).stderr
     assert not records.exists()
     git("branch", "-d", "worktree")
+    manual = call("create")
+    assert manual["agent"] == "manual" and "created_at" in manual and "gitdir" in manual
+    call("finish", manual["id"])
+    git("worktree", "remove", manual["path"])
+    for identity_variable in ("CODEX_THREAD_ID", "CODEX_SESSION_ID"):
+        env[identity_variable] = "calling-agent-id"
+        try:
+            for output_flags in ((), ("--json",), ("--verbose",)):
+                response = json.loads(run(binary, "create", *output_flags).stdout)
+                assert set(response) == {"command", "result", "schema_version"}
+                assert response["command"] == "create" and response["schema_version"] == 1
+                agent_task = response["result"]
+                if "--verbose" in output_flags:
+                    assert agent_task["owner_id"] == "calling-agent-id"
+                    assert {"agent", "common_gitdir", "gitdir", "created_at"} <= set(agent_task)
+                else:
+                    assert set(agent_task) == {"id", "path", "branch", "state", "agent", "owner_id"}
+                    assert agent_task["agent"] == "codex" and agent_task["owner_id"] == "calling-agent-id"
+                assert Path(agent_task["path"]).exists() and agent_task["state"] == "active"
+                for _ in range(2):
+                    finished_agent = json.loads(run(binary, "finish", agent_task["id"]).stdout)["result"]
+                    assert set(finished_agent) == {"id", "path", "branch", "state", "agent", "owner_id"}
+                    assert finished_agent["id"] == agent_task["id"] and finished_agent["state"] == "finished"
+                verbose_finish = json.loads(run(binary, "finish", agent_task["id"], "--verbose").stdout)["result"]
+                assert "finished_at" in verbose_finish and "gitdir" in verbose_finish
+                git("worktree", "remove", agent_task["path"])
+            for selected_agent, selected_owner in (("pi", "launcher-owner"), ("codex", "")):
+                explicit_task = call("create", "--agent", selected_agent, "--owner-id", selected_owner)
+                assert explicit_task["agent"] == selected_agent
+                assert explicit_task.get("owner_id", "") == selected_owner
+                assert ("owner_id" in explicit_task) == bool(selected_owner)
+                call("finish", explicit_task["id"])
+                git("worktree", "remove", explicit_task["path"])
+            rejected_agent = json.loads(run(binary, "create", "--agent", "../escape", ok=False).stdout)
+            assert rejected_agent["error"]["code"] == "invalid_arguments"
+            for positional_args in (("create", "--", "--verbose"), ("finish", "--", "--verbose")):
+                rejected_positional = json.loads(run(binary, *positional_args, ok=False).stdout)
+                assert rejected_positional["error"]["code"] == "invalid_arguments"
+            opaque_owner = call("create", "--owner-id", "--verbose")
+            assert opaque_owner["owner_id"] == "--verbose" and "gitdir" not in opaque_owner
+            call("finish", opaque_owner["id"])
+            git("worktree", "remove", opaque_owner["path"])
+            rejected_finish = json.loads(run(binary, "finish", ok=False).stdout)
+            assert rejected_finish["error"]["code"] == "invalid_arguments"
+        finally:
+            env.pop(identity_variable)
     created = call("create", "--agent", "codex", "--owner-id", "full-launch-token")
     path = Path(created["path"])
     assert created["state"] == "active" and path.is_dir()
@@ -216,12 +264,15 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     call("finish", second_move)
     git("worktree", "remove", second_move)
     vanished = root / "vanished"
+    env["CODEX_THREAD_ID"] = "calling-agent-id"
     hook.write_text(prefix + 'git -C ' + shlex.quote(str(repo)) + ' worktree remove --force --force ' + shlex.quote(str(vanished)) + '\n')
     missing = call("create", "--branch", "vanished-task", "--path", vanished, ok=False)
+    assert set(missing) == {"id", "path", "branch", "state", "agent", "owner_id", "error"}
     assert missing["state"] == "uncertain" and not vanished.exists()
     call("finish", missing["id"])
     (repo / ".git/hooks/post-checkout").write_text("#!/bin/sh\nexit 7\n")
     (repo / ".git/hooks/post-checkout").chmod(0o755)
     partial = call("create", "--branch", "hook-failure", ok=False)
+    assert set(partial) == {"id", "path", "branch", "state", "agent", "owner_id", "error"}
     assert partial["state"] == "active" and Path(partial["path"]).exists() and "exit status 7" in partial["error"]
     print("Lifecycle: protected create, finish, safe pruning, limits, backfill and partial Git outcomes passed")

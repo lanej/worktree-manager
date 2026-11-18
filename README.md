@@ -20,7 +20,7 @@ The installer places the executable at `~/.local/bin/worktree`, verifies its che
 
 ```sh
 # From an existing repository; the default .worktrees/ destination must be ignored.
-worktree create --agent codex --owner-id FULL_LAUNCH_TOKEN --json
+worktree create --json
 # Use the returned path and task ID. Each request creates a fresh named branch/checkout.
 worktree status
 worktree finish TASK_ID
@@ -28,7 +28,7 @@ worktree prune --all                 # Preview only.
 worktree prune --all --apply         # Recheck and explicitly remove eligible candidates.
 ```
 
-Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens; it defaults to `manual` for direct use. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens. A nonempty `CODEX_THREAD_ID` infers `codex` and its full owner ID, falling back to `CODEX_SESSION_ID`; without either, the agent defaults to `manual` with no owner ID. Explicit flags override these defaults, including `--owner-id ''` to omit the owner. Selecting another agent with `--agent` suppresses Codex owner inference. Other clients pass `--agent` and `--owner-id` explicitly. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
 
 No task name is required: omit `--branch` to generate `worktree/<agent>-<8-hex>`, or supply a descriptive fresh branch explicitly. Renaming the branch later preserves the checkout directory and registration identity. `--owner-id` records the full launcher/agent identity when known; native session IDs may be linked by the launcher after startup. Task JSON and status show agent and owner identities; status also distinguishes `observed_branch` and `observed_path` from the original record. Older records without agent metadata remain readable.
 
@@ -92,6 +92,8 @@ Run `worktree prune --help` for the complete inherited cleanup contract. The fir
 ## JSON, storage and integration
 
 All public data commands support `--json` with a `schema_version: 1`, `command`, and `result` envelope. Exact numeric values are decimal strings. Filesystem-byte surrogate escapes remain intact. Failures before a result use an `error` envelope with `code`, `outcome`, and `message`; stderr carries diagnostics. A nonzero exit with a result can describe a confirmed checkout plus a hook failure or an incomplete report.
+
+When `CODEX_THREAD_ID` or `CODEX_SESSION_ID` identifies a calling agent, `create` and `finish` return compact JSON automatically, including when `--json` is supplied. Their result contains only `id`, `path`, `branch`, `state`, `agent`, optional `owner_id`, and any `error`, retaining the full task ID, ownership verification fields, and failure evidence needed to act safely. Pass `--verbose` to either command for the full task record. Full records remain persisted and available through `status --json`. Without a detected caller, the existing human and `--json` formats remain the defaults. Other commands retain their existing output.
 
 Prune rows retain their preview `action` and reason; `outcome` distinguishes `not_attempted`, `retained`, `removed`, and `unknown`. `removed` requires a successful native removal receipt and reconciliation confirming that registration and directory are gone. Apply output includes mutation logs and diagnostics. Task reports distinguish recorded and observed paths and do not infer completion from absent processes or missing directories.
 

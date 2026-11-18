@@ -73,8 +73,8 @@ func (p *policy) app(args []string) (int, error) {
 Usage: worktree COMMAND [OPTIONS]
 
   create [--agent SLUG] [--owner-id ID] [--branch NAME] [--base HEAD]
-         [--path PATH] [--repo PATH] [--json]
-  finish TASK_ID|PATH [--json]        Finish protection; never delete
+         [--path PATH] [--repo PATH] [--json] [--verbose]
+  finish TASK_ID|PATH [--json] [--verbose]  Finish protection; never delete
   backfill ROOT... [--json]          Discover existing repositories explicitly
   status [--json]                    Reconcile all known repositories and tasks
   prune [OPTIONS] [ROOT]             Preview; --apply/-y explicitly removes
@@ -90,8 +90,12 @@ active processes and unfinished Git operations cannot be overridden by --force.
 Run worktree prune --help for the complete cleanup contract.
 
 Create defaults to <primary>/.worktrees/<agent>-<8-hex> and a matching
-worktree/<agent>-<8-hex> branch. Agent defaults to manual. The destination
-must be ignored; linked checkouts resolve to the same primary repository.
+worktree/<agent>-<8-hex> branch. CODEX_THREAD_ID (or CODEX_SESSION_ID) defaults
+the agent to codex and supplies its owner ID; otherwise the agent is manual.
+Explicit flags override inference. The destination must be ignored; linked
+checkouts resolve to the same primary repository.
+Detected Codex callers receive compact create/finish JSON (id, path, branch,
+state, agent, optional owner_id and any error). Use --verbose for the full task record.
 
 Installed runtime: Git; cleanup also needs Bash, lsof and standard Unix tools.
 Codex session reporting uses optional sqlite3. No Python or Go installation needed.`)
@@ -375,7 +379,9 @@ func entry() int {
 	p := &policy{ctx: ctx}
 
 	status, err := p.app(os.Args[1:])
-	if err != nil && !p.reported && len(os.Args) > 1 && contains(os.Args[2:], "--json") && os.Args[1] != "policy" && os.Args[1] != "legacy-cleanup" && !strings.HasPrefix(os.Args[1], "internal-") {
+	machine := len(os.Args) > 1 && (contains(os.Args[2:], "--json") || (codexOwner() != "" && (os.Args[1] == "create" || os.Args[1] == "finish")))
+
+	if err != nil && !p.reported && machine && os.Args[1] != "policy" && os.Args[1] != "legacy-cleanup" && !strings.HasPrefix(os.Args[1], "internal-") {
 		code, outcome := "operation_failed", "unconfirmed"
 		if status == 2 {
 			code, outcome = "invalid_arguments", "rejected"
