@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 )
 
-// gitText retains the filesystem bytes encoded by Python's surrogateescape JSON.
+// gitText retains arbitrary filesystem bytes using JSON surrogate escapes.
 type gitText string
 
 func (value gitText) MarshalJSON() ([]byte, error) {

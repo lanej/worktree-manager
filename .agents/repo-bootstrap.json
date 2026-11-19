@@ -1,6 +1,6 @@
 {
   "agents": "codex",
-  "detect_languages": true,
+  "detect_languages": false,
   "files": {
     ".agents/skills/architecture/SKILL.md": {
       "executable": false,
@@ -36,26 +36,6 @@
       "executable": false,
       "kind": "file",
       "sha256": "64548321a54fa902090ed5fb5a3433e1a5650b1200c5f1a77ead8ffcfdaec27b"
-    },
-    ".agents/skills/builder/scripts/check_examples.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "63eafae9a01d8e9b5cf3751b840a6d5a481365e7d24f9f14ad5b97440194f886"
-    },
-    ".agents/skills/builder/scripts/decisions.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "fb1af90e67bb062adb0e578c1469938c9d0f0300fe559db5b609bf0a5a5cf00c"
-    },
-    ".agents/skills/builder/scripts/operations.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "8bb1e09cf8b3bed10388e66a0562a6c757771631f9bf002d58ee31124aa43a3d"
-    },
-    ".agents/skills/builder/scripts/utility.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "59b22ac5adb5d10e943d9402e1ced8b3842b7130018c66368e00958ce1ee3f37"
     },
     ".agents/skills/code-comments/SKILL.md": {
       "executable": false,
@@ -101,31 +81,6 @@
       "executable": false,
       "kind": "file",
       "sha256": "d7df18f6881335d12ed183c4dfba21bd80013649a71ec9b798d7c97f35733567"
-    },
-    ".agents/skills/go/assets/check-go.sh": {
-      "executable": true,
-      "kind": "file",
-      "sha256": "8f1f0041f8afefbcfc3e424fa998972ac923cf314ee20ed1153b5d5e64f1b89c"
-    },
-    ".agents/skills/go/assets/go-quality.json": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "db588c2d045b34c688be315e22c19ffe07f060a15669de81bd5405249abc653f"
-    },
-    ".agents/skills/go/assets/go-quality.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "e38d9e1eb90220f47df858f7ec04dbf7e7ff3a05d18f9e19069eee42c0585aa9"
-    },
-    ".agents/skills/go/assets/go-quality.yml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "ea91828030970b2a437a9554aaf9014552ad75709a2adb29e8bdc7d093805282"
-    },
-    ".agents/skills/go/assets/golangci.yml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "21f5462c4ad46639adafbc44930c756fbc8354307440f32b589e3a841423d953"
     },
     ".agents/skills/go/references/correctness.md": {
       "executable": false,
@@ -177,70 +132,10 @@
       "kind": "file",
       "sha256": "e5f8ef42b839bc4935124bdf5116d19e36400186bfe1f1acfe84f2eed19ca722"
     },
-    ".agents/skills/python/SKILL.md": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "47d385c9c1f46b27cbe304d8af1e27787d0d8ba9ae108364b3ef0c1b0c4b22a7"
-    },
-    ".agents/skills/python/assets/check-python.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "9a8d4205e7ce9453f089e69ead3c1fad39b35ba278d63f409067c0a0efccc24c"
-    },
-    ".agents/skills/python/assets/gitignore": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "c3361f2e0d8f72919c59420674aba1a56fbe34d54fd1bc09ef708d4cd42dc309"
-    },
-    ".agents/skills/python/assets/pyproject.toml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "9f46f3e07c3c4f9f1af723a1b3fdea20c788dbf0fa34ca7dbb20dfeb377e3cd8"
-    },
-    ".agents/skills/python/assets/python-quality.json": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "19f88a6e59941142627e2c6dd112e733f96bb2561db4750b0043e452f0b24c11"
-    },
-    ".agents/skills/python/assets/python-quality.yml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "0368de9d9c04bbeb83a988c4dceeadbdab14317a2f4351d4cdbf06f07c529068"
-    },
-    ".agents/skills/python/assets/ruff.toml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "b31a8598c9ff18dddbbf690b0728623f48b2efa429eb0c932c872038288f54af"
-    },
-    ".agents/skills/python/assets/ty.toml": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "013e14a6bb7a5d7d5fa8867abd2156fa955fcee67b0ca730eb17d85bf1acdbeb"
-    },
-    ".agents/skills/python/assets/uv.lock": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "e595f923451dea87c07dab9b28be646ef9f40985f12515ee5b2df91289151004"
-    },
-    ".agents/skills/python/references/strict-profile.md": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "7af7f3bdfa3f41f8e1fbebd7a8552cbc7329d6c662ef506a67c4d1ce944f069c"
-    },
-    ".agents/skills/python/references/worktree-lessons.md": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "41bf166029b0976f8d2f89760ec6dacc57c765115f18198694664f296cee2012"
-    },
     ".agents/skills/source-code-lifecycle/SKILL.md": {
       "executable": false,
       "kind": "file",
       "sha256": "bdf81ec5394e32973c2e88997bb0f09f75502335595ea69219bc418975b84197"
-    },
-    ".agents/skills/source-code-lifecycle/assets/check-source-code.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "5fa8092a4738a401048d422662f323b24daa29001a93f9287f9cb010c66ac7eb"
     },
     ".agents/skills/source-code-lifecycle/references/kinds.md": {
       "executable": false,
@@ -287,11 +182,6 @@
       "kind": "file",
       "sha256": "5eae5e8701f6f91bbefed3fc09f743146c55e81112332f708fecc05098dfe178"
     },
-    ".go-quality.json": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "db588c2d045b34c688be315e22c19ffe07f060a15669de81bd5405249abc653f"
-    },
     ".golangci.yml": {
       "executable": false,
       "kind": "file",
@@ -311,16 +201,6 @@
       "executable": true,
       "kind": "file",
       "sha256": "8f1f0041f8afefbcfc3e424fa998972ac923cf314ee20ed1153b5d5e64f1b89c"
-    },
-    "scripts/check-source-code.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "5fa8092a4738a401048d422662f323b24daa29001a93f9287f9cb010c66ac7eb"
-    },
-    "scripts/go-quality.py": {
-      "executable": false,
-      "kind": "file",
-      "sha256": "e38d9e1eb90220f47df858f7ec04dbf7e7ff3a05d18f9e19069eee42c0585aa9"
     }
   },
   "go_legacy": null,
@@ -339,7 +219,6 @@
     "go": "1.0.1",
     "library-code-comments": "1.0.0",
     "pr-writer": "1.0.0",
-    "python": "1.0.0",
     "source-code-lifecycle": "1.0.0",
     "testing": "1.0.0"
   },
@@ -352,7 +231,6 @@
     "go",
     "library-code-comments",
     "pr-writer",
-    "python",
     "source-code-lifecycle",
     "testing"
   ],

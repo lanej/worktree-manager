@@ -51,4 +51,4 @@ Committed source comments and project documentation describe the current behavio
 
 Read [the architecture standard](references/standard.md) for capability boundaries, models, adapters, consequential effects or architecture reviews for rationale, evidence and limits. Read the [construction policy](references/construction.md) for uncertain feasibility, retained prototypes, manual-only protection, security/performance viability or ambiguity about verification timing. Read [instruction routing](references/instructions.md) when configuring host loading.
 
-For concrete examples, run `python3 scripts/check_examples.py` from this skill directory. These exercise example behavior and detector sensitivity, not real providers or assistant adherence.
+This repository exercises consequential behavior through the native [acceptance checks](../../../internal/acceptance). Run `scripts/test.sh`; use test-owned fixtures for detector-sensitivity checks.

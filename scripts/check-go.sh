@@ -6,8 +6,8 @@ lint_version=2.13.2
 vuln_version=v1.9.0
 mode=${1:-all}
 case "$mode" in
-    all|compile|alpha|lint|fmt|fix|test|vuln|tools|baseline|ratchet) ;;
-    *) printf 'Usage: %s [all|compile|alpha|lint|fmt [files...]|fix packages...|test|vuln|tools|baseline|ratchet]\n' "$0" >&2; exit 2 ;;
+    all|compile|alpha|lint|fmt|fix|test|vuln|tools) ;;
+    *) printf 'Usage: %s [all|compile|alpha|lint|fmt [files...]|fix packages...|test|vuln|tools]\n' "$0" >&2; exit 2 ;;
 esac
 if [ "$#" -gt 0 ]; then shift; fi
 if [ "$mode" != fmt ] && [ "$mode" != fix ] && [ "$#" -gt 0 ]; then
@@ -16,16 +16,12 @@ if [ "$mode" != fmt ] && [ "$mode" != fix ] && [ "$#" -gt 0 ]; then
 fi
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
-if [ ! -f go.mod ] || [ ! -f scripts/go-quality.py ]; then
+if [ ! -f go.mod ] || [ ! -f .golangci.yml ]; then
     printf 'Run from a project with go.mod and the committed Go quality profile.\n' >&2
     exit 1
 fi
 command -v go >/dev/null || { printf 'Install the Go toolchain selected by go.mod.\n' >&2; exit 1; }
-command -v python3 >/dev/null || { printf 'Go quality requires Python 3.9+ for its policy and baseline helper.\n' >&2; exit 1; }
-settings=$(python3 scripts/go-quality.py policy)
-lint_config=$(printf '%s\n' "$settings" | sed -n '1p')
-rollout=$(printf '%s\n' "$settings" | sed -n '2p')
-legacy_config=$(printf '%s\n' "$settings" | sed -n '3p')
+lint_config=.golangci.yml
 # WHY: A parent workspace must not replace dependencies that CI resolves alone.
 export GOWORK=off
 # Every entrypoint must select the module's check toolchain, including callers
@@ -99,24 +95,15 @@ install_vuln() (
 )
 
 case "$mode" in
-    tools|lint|fmt|fix|all|alpha|baseline|ratchet) install_lint ;;
+    tools|lint|fmt|fix|all|alpha) install_lint ;;
 esac
 if [ "$mode" = compile ]; then
-    if [ -n "$legacy_config" ]; then
-        install_lint
-        "$lint" config verify --config "$legacy_config"
-        "$lint" run --config "$legacy_config" --fix=false ./...
-    fi
     go build ./...
 fi
 if [ "$mode" = tools ]; then
     install_vuln
 fi
 if [ "$mode" = fmt ]; then
-    if [ "$rollout" = ratchet ] && [ "$#" -eq 0 ]; then
-        printf 'Select files explicitly: bash scripts/check-go.sh fmt path/to/file.go\n' >&2
-        exit 1
-    fi
     "$lint" fmt --config "$lint_config" "$@"
 fi
 if [ "$mode" = fix ]; then
@@ -126,16 +113,15 @@ if [ "$mode" = fix ]; then
     fi
     "$lint" run --config "$lint_config" --enable-only=wsl_v5 --fix "$@"
 fi
-if [ "$mode" = lint ] || [ "$mode" = all ] || [ "$mode" = alpha ] || [ "$mode" = baseline ] || [ "$mode" = ratchet ]; then
-    if [ -n "$legacy_config" ]; then
-        "$lint" config verify --config "$legacy_config"
-        "$lint" run --config "$legacy_config" --fix=false ./...
-    fi
+if [ "$mode" = lint ] || [ "$mode" = all ] || [ "$mode" = alpha ]; then
     "$lint" config verify --config "$lint_config"
     go mod tidy -diff
-    action=check
-    case "$mode" in baseline|ratchet) action=$mode ;; esac
-    python3 scripts/go-quality.py "$action" --linter "$lint"
+    "$lint" run --config "$lint_config" --build-tags integration --fix=false --new=false --new-from-rev= --new-from-merge-base= --new-from-patch= ./...
+    format_diff=$("$lint" fmt --config "$lint_config" --diff)
+    if [ -n "$format_diff" ]; then
+        printf '%s\n' "$format_diff" >&2
+        exit 1
+    fi
 fi
 if [ "$mode" = alpha ]; then
     if command -v gotestsum >/dev/null; then

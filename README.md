@@ -118,19 +118,19 @@ Octo Manager can consume task IDs and JSON through the CLI in a future adapter. 
 
 ## Development
 
-The authored `source-code.toml` selects beta assurance for this tool, with strict Go checks and Codex project guidance. `.source-code.json`, `AGENTS.override.md`, the skill packages and check runners are generated from dotfiles' `source-code` tooling. Use `source-code explain --repo .` to inspect desired versus installed policy and `source-code validate --repo .` to validate packages and pins. CI retains its explicit PR-head checkout when the generated Go workflow is refreshed.
+The authored `source-code.toml` selects beta assurance for this tool, with strict Go checks and Codex project guidance. `.source-code.json` records the policy and `.agents/skills/source-code-lifecycle/references/stages.json` selects the native Go/shell command plan. Check runners and copied guidance are project-owned adaptations; review source-code setup or upgrade proposals before applying them, since upstream templates can introduce different dependencies. CI checks the explicit PR head.
 
-The tracked configuration and generated profile travel with manager-created checkouts through Git. A repository using a local/shadow profile must explicitly run `source-code setup --repo CHECKOUT` there; allocation does not copy ignored profiles or execute project setup commands.
+The tracked configuration, guidance, and native checks travel with manager-created checkouts through Git. A repository using a local/shadow profile must explicitly run `source-code setup --repo CHECKOUT` there; allocation does not copy ignored profiles or execute project setup commands.
 
-Use the Go version in `go.mod` and Python 3.11+ for development checks. Runtime binaries are built with `CGO_ENABLED=0`; the committed Go race checks additionally need a C compiler.
+Development and CI use the Go version in `go.mod`, Bash, Git, and the native Unix test tools; Python is not required. Runtime binaries are built with `CGO_ENABLED=0`; the committed Go race checks additionally need a C compiler.
 
 ```sh
-python3 scripts/check-source-code.py go
+scripts/check-source-code.sh go
 scripts/test.sh
 scripts/build-release.sh /tmp/worktree-packages
-python3 scripts/test-install.py --binary /tmp/worktree-packages/worktree-PLATFORM-ARCH
+WORKTREE_PACKAGE_BINARY=/tmp/worktree-packages/worktree-PLATFORM-ARCH scripts/test.sh -run TestNativeInstallation
 ```
 
-Set `WORKTREE_HOOKS_GIT=/path/to/patched/bin/git` to include actual lifecycle-hook acceptance. The native workflow tests macOS/Linux on ARM64/x86_64, uses the existing pinned patched-Git release, and does not recompile Git. Release only artifacts from the identified source commit after applicable checks; retain published versions unchanged.
+The strict gate checks formatting, module tidiness, all configured linters (including integration-tagged code), uncached race tests, and reachable vulnerabilities. `scripts/test.sh` runs the Go acceptance suites against a release-version executable, covering installation, lifecycle, policy, hooks, cleanup, size caching, and WIP recovery. Set `WORKTREE_HOOKS_GIT=/path/to/patched/bin/git` to include actual lifecycle-hook acceptance; its absence produces an explicit skip. Optional `sqlite3` adds session-metadata checks. The native workflow tests macOS/Linux on ARM64/x86_64, uses the existing pinned patched-Git release, and does not recompile Git. Release only artifacts from the identified source commit after applicable checks; retain published versions unchanged.
 
 Tracking and cleanup were initially extracted from [lanej/dotfiles](https://github.com/lanej/dotfiles/tree/17cd6d522a139449f59c0f7a0e4c012054022124), preserving the existing policy and cleanup detectors.

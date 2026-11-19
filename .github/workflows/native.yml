@@ -26,22 +26,17 @@ jobs:
         with:
           go-version-file: go.mod
           cache: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       - name: Install native Linux test dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y lsof sqlite3 bsdextrautils
       - name: Build release executable
         run: scripts/build-release.sh "$RUNNER_TEMP/packages"
-      - name: Check native installation
-        run: python3 scripts/test-install.py --binary "$RUNNER_TEMP/packages/worktree-$(go env GOOS)-$(go env GOARCH)"
       - name: Obtain the existing patched Git runtime
         run: |
           scripts/fetch-test-git.sh "$RUNNER_TEMP/test-git"
           echo "WORKTREE_HOOKS_GIT=$RUNNER_TEMP/test-git/runtime/bin/git" >> "$GITHUB_ENV"
-      - name: Check lifecycle, policy and full cleanup parity
-        run: scripts/test.sh
+      - name: Check installation, lifecycle, policy and cleanup parity
+        run: WORKTREE_PACKAGE_BINARY="$RUNNER_TEMP/packages/worktree-$(go env GOOS)-$(go env GOARCH)" scripts/test.sh
       - name: Check shell scripts
         if: runner.os == 'Linux'
         run: shellcheck scripts/*.sh scripts/install-worktree scripts/cleanup-compat scripts/policy-compat internal/cleanup.sh

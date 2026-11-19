@@ -1,49 +1,12 @@
 {
-  "schema_version": 1,
   "policy_version": "1.0.0",
+  "schema_version": 1,
   "stages": {
-    "research": {
-      "go": [
-        [
-          "bash",
-          "scripts/check-go.sh",
-          "compile"
-        ]
-      ],
-      "typescript": [
-        [
-          "node",
-          "scripts/check-typescript.mjs",
-          "typecheck"
-        ]
-      ],
-      "python": [
-        [
-          "python3",
-          "scripts/check-python.py",
-          "typecheck"
-        ]
-      ]
-    },
     "alpha": {
       "go": [
         [
           "bash",
           "scripts/check-go.sh",
-          "alpha"
-        ]
-      ],
-      "typescript": [
-        [
-          "node",
-          "scripts/check-typescript.mjs",
-          "alpha"
-        ]
-      ],
-      "python": [
-        [
-          "python3",
-          "scripts/check-python.py",
           "alpha"
         ]
       ]
@@ -55,20 +18,6 @@
           "scripts/check-go.sh",
           "all"
         ]
-      ],
-      "typescript": [
-        [
-          "node",
-          "scripts/check-typescript.mjs",
-          "all"
-        ]
-      ],
-      "python": [
-        [
-          "python3",
-          "scripts/check-python.py",
-          "all"
-        ]
       ]
     },
     "production": {
@@ -78,19 +27,14 @@
           "scripts/check-go.sh",
           "all"
         ]
-      ],
-      "typescript": [
+      ]
+    },
+    "research": {
+      "go": [
         [
-          "node",
-          "scripts/check-typescript.mjs",
-          "all"
-        ]
-      ],
-      "python": [
-        [
-          "python3",
-          "scripts/check-python.py",
-          "all"
+          "bash",
+          "scripts/check-go.sh",
+          "compile"
         ]
       ]
     }
