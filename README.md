@@ -28,7 +28,22 @@ worktree prune --all                 # Preview only.
 worktree prune --all --apply         # Recheck and explicitly remove eligible candidates.
 ```
 
-Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens. A nonempty `CODEX_THREAD_ID` infers `codex` and its full owner ID, falling back to `CODEX_SESSION_ID`; without either, the agent defaults to `manual` with no owner ID. Explicit flags override these defaults, including `--owner-id ''` to omit the owner. Selecting another agent with `--agent` suppresses Codex owner inference. Other clients pass `--agent` and `--owner-id` explicitly. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+
+Agent and owner defaults come from the calling environment:
+
+| Agent | Identity signals | Owner ID when available |
+| --- | --- | --- |
+| `codex` | Nonempty `CODEX_THREAD_ID` or `CODEX_SESSION_ID` | `CODEX_THREAD_ID`, falling back to `CODEX_SESSION_ID` |
+| `claude` | Nonempty `CLAUDE_CODE_SESSION_ID` or `CLAUDECODE=1` | `CLAUDE_CODE_SESSION_ID` |
+| `pi` | Nonempty `PI_SESSION_ID` or `PI_CODING_AGENT=true` | `PI_SESSION_ID` |
+| `gemini` | `GEMINI_CLI=1` | None inferred |
+| `opencode` | Nonempty `OPENCODE_SESSION_ID` or `OPENCODE=1` | `OPENCODE_SESSION_ID` |
+| Custom client | Nonempty `AI_AGENT` or `WORKTREE_AGENT` | Optional `WORKTREE_OWNER_ID` paired with `WORKTREE_AGENT` |
+
+The native signals follow the [Claude environment reference](https://code.claude.com/docs/en/env-vars), [Pi environment reference](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/environment-variables.md), [Gemini shell implementation](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/services/shellExecutionService.ts), and [OpenCode shell implementation](https://github.com/anomalyco/opencode/blob/dev/packages/core/src/tool/plugin/shell.ts). Older clients may expose only a marker; no owner ID is invented in that case. Configuration paths, model names, and provider credentials are not identity signals.
+
+Explicit flags override environment defaults, including `--owner-id ''` to omit the owner. `WORKTREE_AGENT` selects a client before automatic detection, and its optional paired `WORKTREE_OWNER_ID` overrides that client's native owner ID. `--agent` selects only the chosen client's owner; it never borrows another client's session ID. Without identity signals the default is `manual` with no owner ID. If inherited native variables identify multiple clients, `create` rejects the ambiguity before mutation; select `--agent` or `WORKTREE_AGENT` explicitly. `AI_AGENT` is a fallback only when no native signals are present, since clients may inherit it or include version information in its value. All inferred and explicit agent slugs undergo the same validation.
 
 No task name is required: omit `--branch` to generate `worktree/<agent>-<8-hex>`, or supply a descriptive fresh branch explicitly. Renaming the branch later preserves the checkout directory and registration identity. `--owner-id` records the full launcher/agent identity when known; native session IDs may be linked by the launcher after startup. Task JSON and status show agent and owner identities; status also distinguishes `observed_branch` and `observed_path` from the original record. Older records without agent metadata remain readable.
 
@@ -93,7 +108,7 @@ Run `worktree prune --help` for the complete inherited cleanup contract. The fir
 
 All public data commands support `--json` with a `schema_version: 1`, `command`, and `result` envelope. Exact numeric values are decimal strings. Filesystem-byte surrogate escapes remain intact. Failures before a result use an `error` envelope with `code`, `outcome`, and `message`; stderr carries diagnostics. A nonzero exit with a result can describe a confirmed checkout plus a hook failure or an incomplete report.
 
-When `CODEX_THREAD_ID` or `CODEX_SESSION_ID` identifies a calling agent, `create` and `finish` return compact JSON automatically, including when `--json` is supplied. Their result contains only `id`, `path`, `branch`, `state`, `agent`, optional `owner_id`, and any `error`, retaining the full task ID, ownership verification fields, and failure evidence needed to act safely. Pass `--verbose` to either command for the full task record. Full records remain persisted and available through `status --json`. Without a detected caller, the existing human and `--json` formats remain the defaults. Other commands retain their existing output.
+When the environment identifies a calling agent, `create` and `finish` return compact JSON automatically, including when `--json` is supplied. Their result contains only `id`, `path`, `branch`, `state`, `agent`, optional `owner_id`, and any `error`, retaining the full task ID, ownership verification fields, and failure evidence needed to act safely. Pass `--verbose` to either command for the full task record. Full records remain persisted and available through `status --json`. Without a detected caller, the existing human and `--json` formats remain the defaults. Other commands retain their existing output.
 
 Prune rows retain their preview `action` and reason; `outcome` distinguishes `not_attempted`, `retained`, `removed`, and `unknown`. `removed` requires a successful native removal receipt and reconciliation confirming that registration and directory are gone. Apply output includes mutation logs and diagnostics. Task reports distinguish recorded and observed paths and do not infer completion from absent processes or missing directories.
 

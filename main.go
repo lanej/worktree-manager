@@ -90,11 +90,13 @@ active processes and unfinished Git operations cannot be overridden by --force.
 Run worktree prune --help for the complete cleanup contract.
 
 Create defaults to <primary>/.worktrees/<agent>-<8-hex> and a matching
-worktree/<agent>-<8-hex> branch. CODEX_THREAD_ID (or CODEX_SESSION_ID) defaults
-the agent to codex and supplies its owner ID; otherwise the agent is manual.
-Explicit flags override inference. The destination must be ignored; linked
-checkouts resolve to the same primary repository.
-Detected Codex callers receive compact create/finish JSON (id, path, branch,
+worktree/<agent>-<8-hex> branch. Codex, Claude, Pi, Gemini CLI and OpenCode
+are detected from their process/session variables. Custom launchers can set
+WORKTREE_AGENT and optional WORKTREE_OWNER_ID; AI_AGENT also identifies callers.
+Explicit flags override inference. Conflicting clients require an explicit agent;
+without signals the agent is manual. See README for the signals and owner rules.
+The destination must be ignored; linked checkouts use the same primary repository.
+Detected callers receive compact create/finish JSON (id, path, branch,
 state, agent, optional owner_id and any error). Use --verbose for the full task record.
 
 Installed runtime: Git; cleanup also needs Bash, lsof and standard Unix tools.
@@ -379,7 +381,7 @@ func entry() int {
 	p := &policy{ctx: ctx}
 
 	status, err := p.app(os.Args[1:])
-	machine := len(os.Args) > 1 && (contains(os.Args[2:], "--json") || (codexOwner() != "" && (os.Args[1] == "create" || os.Args[1] == "finish")))
+	machine := len(os.Args) > 1 && (contains(os.Args[2:], "--json") || (currentCaller().detected && (os.Args[1] == "create" || os.Args[1] == "finish")))
 
 	if err != nil && !p.reported && machine && os.Args[1] != "policy" && os.Args[1] != "legacy-cleanup" && !strings.HasPrefix(os.Args[1], "internal-") {
 		code, outcome := "operation_failed", "unconfirmed"

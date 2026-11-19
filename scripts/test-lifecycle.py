@@ -17,8 +17,9 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     repo = root / "repo"
     repo.mkdir()
     env = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "XDG_", "WORKTREE_"))}
-    env.pop("CODEX_THREAD_ID", None)
-    env.pop("CODEX_SESSION_ID", None)
+    for variable in ("CODEX_THREAD_ID", "CODEX_SESSION_ID", "CLAUDE_CODE_SESSION_ID", "CLAUDECODE",
+                     "PI_SESSION_ID", "PI_CODING_AGENT", "GEMINI_CLI", "OPENCODE_SESSION_ID", "OPENCODE", "AI_AGENT"):
+        env.pop(variable, None)
     env.update(HOME=str(home), GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
                XDG_STATE_HOME=str(home / "state[1]"), XDG_CACHE_HOME=str(home / "cache"),
                GIT_AUTHOR_DATE="2000-01-01T00:00:00Z", GIT_COMMITTER_DATE="2000-01-01T00:00:00Z")
@@ -61,24 +62,36 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
     assert manual["agent"] == "manual" and "created_at" in manual and "gitdir" in manual
     call("finish", manual["id"])
     git("worktree", "remove", manual["path"])
-    for identity_variable in ("CODEX_THREAD_ID", "CODEX_SESSION_ID"):
-        env[identity_variable] = "calling-agent-id"
+    for identity_environment, expected_agent, expected_owner in (
+        ({"CODEX_THREAD_ID": "calling-agent-id"}, "codex", "calling-agent-id"),
+        ({"CODEX_SESSION_ID": "calling-agent-id"}, "codex", "calling-agent-id"),
+        ({"CLAUDE_CODE_SESSION_ID": "calling-agent-id", "CLAUDECODE": "1"}, "claude", "calling-agent-id"),
+        ({"CLAUDECODE": "1"}, "claude", ""),
+        ({"PI_SESSION_ID": "calling-agent-id", "PI_CODING_AGENT": "true", "AI_AGENT": "pi"}, "pi", "calling-agent-id"),
+        ({"PI_CODING_AGENT": "true"}, "pi", ""),
+        ({"GEMINI_CLI": "1"}, "gemini", ""),
+        ({"OPENCODE_SESSION_ID": "calling-agent-id", "OPENCODE": "1", "AI_AGENT": "opencode"}, "opencode", "calling-agent-id"),
+        ({"OPENCODE": "1"}, "opencode", ""),
+        ({"WORKTREE_AGENT": "custom", "WORKTREE_OWNER_ID": "calling-agent-id"}, "custom", "calling-agent-id"),
+        ({"AI_AGENT": "custom"}, "custom", ""),
+    ):
+        env.update(identity_environment)
         try:
             for output_flags in ((), ("--json",), ("--verbose",)):
                 response = json.loads(run(binary, "create", *output_flags).stdout)
                 assert set(response) == {"command", "result", "schema_version"}
                 assert response["command"] == "create" and response["schema_version"] == 1
                 agent_task = response["result"]
+                assert agent_task["agent"] == expected_agent and agent_task.get("owner_id", "") == expected_owner
+                compact_keys = {"id", "path", "branch", "state", "agent"} | ({"owner_id"} if expected_owner else set())
                 if "--verbose" in output_flags:
-                    assert agent_task["owner_id"] == "calling-agent-id"
                     assert {"agent", "common_gitdir", "gitdir", "created_at"} <= set(agent_task)
                 else:
-                    assert set(agent_task) == {"id", "path", "branch", "state", "agent", "owner_id"}
-                    assert agent_task["agent"] == "codex" and agent_task["owner_id"] == "calling-agent-id"
+                    assert set(agent_task) == compact_keys
                 assert Path(agent_task["path"]).exists() and agent_task["state"] == "active"
                 for _ in range(2):
                     finished_agent = json.loads(run(binary, "finish", agent_task["id"]).stdout)["result"]
-                    assert set(finished_agent) == {"id", "path", "branch", "state", "agent", "owner_id"}
+                    assert set(finished_agent) == compact_keys
                     assert finished_agent["id"] == agent_task["id"] and finished_agent["state"] == "finished"
                 verbose_finish = json.loads(run(binary, "finish", agent_task["id"], "--verbose").stdout)["result"]
                 assert "finished_at" in verbose_finish and "gitdir" in verbose_finish
@@ -102,7 +115,28 @@ with tempfile.TemporaryDirectory(prefix="worktree-lifecycle-") as temporary:
             rejected_finish = json.loads(run(binary, "finish", ok=False).stdout)
             assert rejected_finish["error"]["code"] == "invalid_arguments"
         finally:
-            env.pop(identity_variable)
+            for variable in identity_environment:
+                env.pop(variable)
+    env.update(CODEX_THREAD_ID="codex-owner", CLAUDE_CODE_SESSION_ID="claude-owner")
+    try:
+        before_conflict = git("for-each-ref", "--format=%(refname)").stdout
+        rejected_conflict = json.loads(run(binary, "create", ok=False).stdout)
+        assert rejected_conflict["error"]["code"] == "invalid_arguments"
+        assert "multiple agent environments" in rejected_conflict["error"]["message"]
+        assert git("for-each-ref", "--format=%(refname)").stdout == before_conflict
+        for selector in ("flag", "environment"):
+            if selector == "environment":
+                env["WORKTREE_AGENT"] = "claude"
+            selected = call("create", *( ("--agent", "claude") if selector == "flag" else () ))
+            assert selected["agent"] == "claude" and selected["owner_id"] == "claude-owner"
+            call("finish", selected["id"])
+            git("worktree", "remove", selected["path"])
+        env["WORKTREE_AGENT"] = "../escape"
+        invalid_environment = json.loads(run(binary, "create", ok=False).stdout)
+        assert invalid_environment["error"]["code"] == "invalid_arguments"
+    finally:
+        for variable in ("CODEX_THREAD_ID", "CLAUDE_CODE_SESSION_ID", "WORKTREE_AGENT"):
+            env.pop(variable, None)
     created = call("create", "--agent", "codex", "--owner-id", "full-launch-token")
     path = Path(created["path"])
     assert created["state"] == "active" and path.is_dir()

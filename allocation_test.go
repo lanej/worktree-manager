@@ -135,8 +135,7 @@ func TestCreateEnvironmentIdentity(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			p, options := allocationFixture(t)
-			t.Setenv("CODEX_THREAD_ID", test.threadID)
-			t.Setenv("CODEX_SESSION_ID", test.sessionID)
+			setCallerEnvironment(t, map[string]string{"CODEX_THREAD_ID": test.threadID, "CODEX_SESSION_ID": test.sessionID})
 
 			args := append([]string{"--repo", options.repo, "--json"}, test.args...)
 			if status, err := p.create(args); err != nil || status != 0 {

@@ -318,14 +318,6 @@ func within(path, root string) bool {
 	return path == root || strings.HasPrefix(path, root+string(filepath.Separator))
 }
 
-func codexOwner() string {
-	if id := os.Getenv("CODEX_THREAD_ID"); id != "" {
-		return id
-	}
-
-	return os.Getenv("CODEX_SESSION_ID")
-}
-
 func finishOutputFlags(args []string) (remaining []string, machine, compact bool) {
 	args, machine = jsonFlag(args)
 	verbose := false
@@ -343,7 +335,7 @@ func finishOutputFlags(args []string) (remaining []string, machine, compact bool
 		}
 	}
 
-	detected := codexOwner() != ""
+	detected := currentCaller().detected
 
 	return remaining, machine || detected, detected && !verbose
 }
@@ -367,16 +359,11 @@ func (p *policy) taskResult(command string, t task, machine, compact bool) error
 
 func (p *policy) create(args []string) (status int, resultErr error) {
 	args, machine := jsonFlag(args)
-	codexOwnerID := codexOwner()
-	defaultAgent := "manual"
-
-	if codexOwnerID != "" {
-		defaultAgent = "codex"
-	}
+	caller := currentCaller()
 
 	f := flags("create")
 	branch := f.String("branch", "", "new branch name")
-	agent := f.String("agent", defaultAgent, "agent slug used in the checkout name")
+	agent := f.String("agent", caller.agent, "agent slug used in the checkout name")
 	ownerID := f.String("owner-id", "", "full allocation or session owner identity")
 	verbose := f.Bool("verbose", false, "return the full task record")
 	base := f.String("base", "HEAD", "local base revision")
@@ -391,8 +378,8 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 		return 2, errors.New("create accepts no positional arguments")
 	}
 
-	machine = machine || codexOwnerID != ""
-	compact := codexOwnerID != "" && !*verbose
+	machine = machine || caller.detected
+	compact := caller.detected && !*verbose
 	ownerProvided := false
 
 	f.Visit(func(option *flag.Flag) {
@@ -401,8 +388,12 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 		}
 	})
 
-	if !ownerProvided && *agent == "codex" {
-		*ownerID = codexOwnerID
+	if !ownerProvided {
+		*ownerID = caller.owners[*agent]
+	}
+
+	if *agent == "" && caller.agent == "" {
+		return 2, errors.New("multiple agent environments detected; select --agent or WORKTREE_AGENT")
 	}
 
 	if !agentPattern.MatchString(*agent) {
