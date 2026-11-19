@@ -5,7 +5,7 @@ mode = "tracked"
 skills = ["builder", "go", "pr-writer"]
 agents = "codex"
 pr_template = "none"
-detect_languages = true
+detect_languages = false
 
 [checks.go]
 enabled = true

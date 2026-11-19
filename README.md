@@ -20,7 +20,7 @@ The installer places the executable at `~/.local/bin/worktree`, verifies its che
 
 ```sh
 # From an existing repository; the default .worktrees/ destination must be ignored.
-worktree create --agent codex --owner-id FULL_LAUNCH_TOKEN --json
+worktree create --json
 # Use the returned path and task ID. Each request creates a fresh named branch/checkout.
 worktree status
 worktree finish TASK_ID
@@ -28,7 +28,22 @@ worktree prune --all                 # Preview only.
 worktree prune --all --apply         # Recheck and explicitly remove eligible candidates.
 ```
 
-Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens; it defaults to `manual` for direct use. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+Creation defaults to local `HEAD` and never fetches or resets an existing branch. The default path is `<primary>/.worktrees/<agent>-<8-hex>`, for example `.worktrees/codex-a3f92c1e/`, even when called from a linked checkout. `--agent` accepts a lowercase letter/digit followed by up to 47 lowercase letters, digits or hyphens. The full random 128-bit allocation ID remains the durable identity. Generated path or branch collisions retry up to 16 identities without reusing existing work.
+
+Agent and owner defaults come from the calling environment:
+
+| Agent | Identity signals | Owner ID when available |
+| --- | --- | --- |
+| `codex` | Nonempty `CODEX_THREAD_ID` or `CODEX_SESSION_ID` | `CODEX_THREAD_ID`, falling back to `CODEX_SESSION_ID` |
+| `claude` | Nonempty `CLAUDE_CODE_SESSION_ID` or `CLAUDECODE=1` | `CLAUDE_CODE_SESSION_ID` |
+| `pi` | Nonempty `PI_SESSION_ID` or `PI_CODING_AGENT=true` | `PI_SESSION_ID` |
+| `gemini` | `GEMINI_CLI=1` | None inferred |
+| `opencode` | Nonempty `OPENCODE_SESSION_ID` or `OPENCODE=1` | `OPENCODE_SESSION_ID` |
+| Custom client | Nonempty `AI_AGENT` or `WORKTREE_AGENT` | Optional `WORKTREE_OWNER_ID` paired with `WORKTREE_AGENT` |
+
+The native signals follow the [Claude environment reference](https://code.claude.com/docs/en/env-vars), [Pi environment reference](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/docs/environment-variables.md), [Gemini shell implementation](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/services/shellExecutionService.ts), and [OpenCode shell implementation](https://github.com/anomalyco/opencode/blob/dev/packages/core/src/tool/plugin/shell.ts). Older clients may expose only a marker; no owner ID is invented in that case. Configuration paths, model names, and provider credentials are not identity signals.
+
+Explicit flags override environment defaults, including `--owner-id ''` to omit the owner. `WORKTREE_AGENT` selects a client before automatic detection, and its optional paired `WORKTREE_OWNER_ID` overrides that client's native owner ID. `--agent` selects only the chosen client's owner; it never borrows another client's session ID. Without identity signals the default is `manual` with no owner ID. If inherited native variables identify multiple clients, `create` rejects the ambiguity before mutation; select `--agent` or `WORKTREE_AGENT` explicitly. `AI_AGENT` is a fallback only when no native signals are present, since clients may inherit it or include version information in its value. All inferred and explicit agent slugs undergo the same validation.
 
 No task name is required: omit `--branch` to generate `worktree/<agent>-<8-hex>`, or supply a descriptive fresh branch explicitly. Renaming the branch later preserves the checkout directory and registration identity. `--owner-id` records the full launcher/agent identity when known; native session IDs may be linked by the launcher after startup. Task JSON and status show agent and owner identities; status also distinguishes `observed_branch` and `observed_path` from the original record. Older records without agent metadata remain readable.
 
@@ -93,6 +108,8 @@ Run `worktree prune --help` for the complete inherited cleanup contract. The fir
 
 All public data commands support `--json` with a `schema_version: 1`, `command`, and `result` envelope. Exact numeric values are decimal strings. Filesystem-byte surrogate escapes remain intact. Failures before a result use an `error` envelope with `code`, `outcome`, and `message`; stderr carries diagnostics. A nonzero exit with a result can describe a confirmed checkout plus a hook failure or an incomplete report.
 
+When the environment identifies a calling agent, `create` and `finish` return compact JSON automatically, including when `--json` is supplied. Their result contains only `id`, `path`, `branch`, `state`, `agent`, optional `owner_id`, and any `error`, retaining the full task ID, ownership verification fields, and failure evidence needed to act safely. Pass `--verbose` to either command for the full task record. Full records remain persisted and available through `status --json`. Without a detected caller, the existing human and `--json` formats remain the defaults. Other commands retain their existing output.
+
 Prune rows retain their preview `action` and reason; `outcome` distinguishes `not_attempted`, `retained`, `removed`, and `unknown`. `removed` requires a successful native removal receipt and reconciliation confirming that registration and directory are gone. Apply output includes mutation logs and diagnostics. Task reports distinguish recorded and observed paths and do not infer completion from absent processes or missing directories.
 
 The original canonical common-Git-directory identities and JSON files under `$XDG_STATE_HOME/git-worktree-policy` remain compatible, including arbitrary-size limits. New tasks live under `$XDG_STATE_HOME/worktree-manager/tasks`; a token in each owned Git registration prevents association with a replacement registration. The default state root is `~/.local/state`. `worktree policy` retains the old policy command interface and JSON output.
@@ -101,19 +118,19 @@ Octo Manager can consume task IDs and JSON through the CLI in a future adapter. 
 
 ## Development
 
-The authored `source-code.toml` selects beta assurance for this tool, with strict Go checks and Codex project guidance. `.source-code.json`, `AGENTS.override.md`, the skill packages and check runners are generated from dotfiles' `source-code` tooling. Use `source-code explain --repo .` to inspect desired versus installed policy and `source-code validate --repo .` to validate packages and pins. CI retains its explicit PR-head checkout when the generated Go workflow is refreshed.
+The authored `source-code.toml` selects beta assurance for this tool, with strict Go checks and Codex project guidance. `.source-code.json` records the policy and `.agents/skills/source-code-lifecycle/references/stages.json` selects the native Go/shell command plan. Check runners and copied guidance are project-owned adaptations; review source-code setup or upgrade proposals before applying them, since upstream templates can introduce different dependencies. CI checks the explicit PR head.
 
-The tracked configuration and generated profile travel with manager-created checkouts through Git. A repository using a local/shadow profile must explicitly run `source-code setup --repo CHECKOUT` there; allocation does not copy ignored profiles or execute project setup commands.
+The tracked configuration, guidance, and native checks travel with manager-created checkouts through Git. A repository using a local/shadow profile must explicitly run `source-code setup --repo CHECKOUT` there; allocation does not copy ignored profiles or execute project setup commands.
 
-Use the Go version in `go.mod` and Python 3.11+ for development checks. Runtime binaries are built with `CGO_ENABLED=0`; the committed Go race checks additionally need a C compiler.
+Development and CI use the Go version in `go.mod`, Bash, Git, and the native Unix test tools; Python is not required. Runtime binaries are built with `CGO_ENABLED=0`; the committed Go race checks additionally need a C compiler.
 
 ```sh
-python3 scripts/check-source-code.py go
+scripts/check-source-code.sh go
 scripts/test.sh
 scripts/build-release.sh /tmp/worktree-packages
-python3 scripts/test-install.py --binary /tmp/worktree-packages/worktree-PLATFORM-ARCH
+WORKTREE_PACKAGE_BINARY=/tmp/worktree-packages/worktree-PLATFORM-ARCH scripts/test.sh -run TestNativeInstallation
 ```
 
-Set `WORKTREE_HOOKS_GIT=/path/to/patched/bin/git` to include actual lifecycle-hook acceptance. The native workflow tests macOS/Linux on ARM64/x86_64, uses the existing pinned patched-Git release, and does not recompile Git. Release only artifacts from the identified source commit after applicable checks; retain published versions unchanged.
+The strict gate checks formatting, module tidiness, all configured linters (including integration-tagged code), uncached race tests, and reachable vulnerabilities. `scripts/test.sh` runs the Go acceptance suites against a release-version executable, covering installation, lifecycle, policy, hooks, cleanup, size caching, and WIP recovery. Set `WORKTREE_HOOKS_GIT=/path/to/patched/bin/git` to include actual lifecycle-hook acceptance; its absence produces an explicit skip. Optional `sqlite3` adds session-metadata checks. The native workflow tests macOS/Linux on ARM64/x86_64, uses the existing pinned patched-Git release, and does not recompile Git. Release only artifacts from the identified source commit after applicable checks; retain published versions unchanged.
 
 Tracking and cleanup were initially extracted from [lanej/dotfiles](https://github.com/lanej/dotfiles/tree/17cd6d522a139449f59c0f7a0e4c012054022124), preserving the existing policy and cleanup detectors.

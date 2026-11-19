@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -317,12 +318,54 @@ func within(path, root string) bool {
 	return path == root || strings.HasPrefix(path, root+string(filepath.Separator))
 }
 
+func finishOutputFlags(args []string) (remaining []string, machine, compact bool) {
+	args, machine = jsonFlag(args)
+	verbose := false
+
+	for index, arg := range args {
+		if arg == "--" {
+			remaining = append(remaining, args[index:]...)
+			break
+		}
+
+		if arg == "--verbose" {
+			verbose = true
+		} else {
+			remaining = append(remaining, arg)
+		}
+	}
+
+	detected := currentCaller().detected
+
+	return remaining, machine || detected, detected && !verbose
+}
+
+func (p *policy) taskResult(command string, t task, machine, compact bool) error {
+	if !compact {
+		return p.result(command, t, machine)
+	}
+
+	result := map[string]any{"id": t.ID, "path": t.Path, "branch": t.Branch, "state": t.State, "agent": t.Agent}
+	if t.OwnerID != "" {
+		result["owner_id"] = t.OwnerID
+	}
+
+	if t.Error != "" {
+		result["error"] = t.Error
+	}
+
+	return p.result(command, result, machine)
+}
+
 func (p *policy) create(args []string) (status int, resultErr error) {
 	args, machine := jsonFlag(args)
+	caller := currentCaller()
+
 	f := flags("create")
 	branch := f.String("branch", "", "new branch name")
-	agent := f.String("agent", "manual", "agent slug used in the checkout name")
+	agent := f.String("agent", caller.agent, "agent slug used in the checkout name")
 	ownerID := f.String("owner-id", "", "full allocation or session owner identity")
+	verbose := f.Bool("verbose", false, "return the full task record")
 	base := f.String("base", "HEAD", "local base revision")
 	destination := f.String("path", "", "new checkout directory")
 
@@ -333,6 +376,24 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 
 	if f.NArg() != 0 {
 		return 2, errors.New("create accepts no positional arguments")
+	}
+
+	machine = machine || caller.detected
+	compact := caller.detected && !*verbose
+	ownerProvided := false
+
+	f.Visit(func(option *flag.Flag) {
+		if option.Name == "owner-id" {
+			ownerProvided = true
+		}
+	})
+
+	if !ownerProvided {
+		*ownerID = caller.owners[*agent]
+	}
+
+	if *agent == "" && caller.agent == "" {
+		return 2, errors.New("multiple agent environments detected; select --agent or WORKTREE_AGENT")
 	}
 
 	if !agentPattern.MatchString(*agent) {
@@ -452,7 +513,7 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 		return 1, errors.Join(combined, err)
 	}
 
-	if err = p.result("create", t, machine); err != nil {
+	if err = p.taskResult("create", t, machine, compact); err != nil {
 		return 1, errors.Join(combined, err)
 	}
 
@@ -460,7 +521,7 @@ func (p *policy) create(args []string) (status int, resultErr error) {
 }
 
 func (p *policy) finish(args []string) (status int, resultErr error) {
-	args, machine := jsonFlag(args)
+	args, machine, compact := finishOutputFlags(args)
 	if len(args) != 1 {
 		return 2, errors.New("finish requires a task ID or created checkout path")
 	}
@@ -530,7 +591,7 @@ func (p *policy) finish(args []string) (status int, resultErr error) {
 	}
 
 	if t.State == taskFinished {
-		return 0, p.result("finish", t, machine)
+		return 0, p.taskResult("finish", t, machine, compact)
 	}
 
 	state, err := p.inventory(string(t.Common))
@@ -576,7 +637,7 @@ func (p *policy) finish(args []string) (status int, resultErr error) {
 		return 1, err
 	}
 
-	return 0, p.result("finish", t, machine)
+	return 0, p.taskResult("finish", t, machine, compact)
 }
 
 func (p *policy) taskReports(tasks []task) ([]map[string]any, error) {

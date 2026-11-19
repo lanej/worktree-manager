@@ -1,10 +1,28 @@
 {
-  "schema_version": 1,
-  "policy_version": "1.0.0",
-  "stage": "beta",
+  "detection": {
+    "enabled": false,
+    "evidence": {
+      "go": [
+        "allocation.go",
+        "allocation_test.go",
+        "cleanup.go",
+        "cleanup_json.go",
+        "discovery.go"
+      ]
+    },
+    "languages": [
+      "go"
+    ],
+    "skills": [
+      "go"
+    ]
+  },
+  "kind": "tool",
   "languages": [
     "go"
   ],
+  "policy_version": "1.0.0",
+  "schema_version": 1,
   "skills": {
     "architecture": "1.0.0",
     "builder": "1.0.1",
@@ -14,36 +32,8 @@
     "go": "1.0.1",
     "library-code-comments": "1.0.0",
     "pr-writer": "1.0.0",
-    "python": "1.0.0",
     "source-code-lifecycle": "1.0.0",
     "testing": "1.0.0"
   },
-  "detection": {
-    "enabled": true,
-    "languages": [
-      "go",
-      "python"
-    ],
-    "skills": [
-      "go",
-      "python"
-    ],
-    "evidence": {
-      "go": [
-        "allocation.go",
-        "allocation_test.go",
-        "cleanup.go",
-        "cleanup_json.go",
-        "discovery.go"
-      ],
-      "python": [
-        "scripts/test-git-worktree-cleanup.py",
-        "scripts/test-git-worktree-policy.py",
-        "scripts/test-git-worktree-size-cache.py",
-        "scripts/test-git-worktree-wip-push.py",
-        "scripts/test-hooks.py"
-      ]
-    }
-  },
-  "kind": "tool"
+  "stage": "beta"
 }
