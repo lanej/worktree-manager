@@ -134,3 +134,30 @@ WORKTREE_PACKAGE_BINARY=/tmp/worktree-packages/worktree-PLATFORM-ARCH scripts/te
 The strict gate checks formatting, module tidiness, all configured linters (including integration-tagged code), uncached race tests, and reachable vulnerabilities. `scripts/test.sh` runs the Go acceptance suites against a release-version executable, covering installation, lifecycle, policy, hooks, cleanup, size caching, and WIP recovery. Set `WORKTREE_HOOKS_GIT=/path/to/patched/bin/git` to include actual lifecycle-hook acceptance; its absence produces an explicit skip. Optional `sqlite3` adds session-metadata checks. The native workflow tests macOS/Linux on ARM64/x86_64, uses the existing pinned patched-Git release, and does not recompile Git. Release only artifacts from the identified source commit after applicable checks; retain published versions unchanged.
 
 Tracking and cleanup were initially extracted from [lanej/dotfiles](https://github.com/lanej/dotfiles/tree/17cd6d522a139449f59c0f7a0e4c012054022124), preserving the existing policy and cleanup detectors.
+
+## Archived Codex tasks
+
+Archive cleanup is opt-in and applies only to manager-created Codex tasks with an exact `owner_id` match in the local Codex thread database. Add this object to `${XDG_CONFIG_HOME:-~/.config}/worktree-manager/config.json`, retaining any existing settings:
+
+```json
+{
+  "archive_cleanup": {
+    "enabled": true,
+    "grace_period": "0"
+  }
+}
+```
+
+`0` makes a task eligible on the first sweep after archival. Set a longer grace period such as `24h` or `7d` to delay eligibility. The clock starts at the later of archival and last thread activity; changing the setting affects the next sweep. Missing timestamps, unavailable SQLite metadata, an unarchived owner, or an unarchived thread working inside the checkout retain protection. An absent setting disables archive cleanup. `WORKTREE_CONFIG` can select another settings file, and `CODEX_HOME` selects the Codex state directory. The newest numeric `state_*.sqlite` database is read without modification; unsupported schemas retain worktrees.
+
+```sh
+worktree cleanup-archived --json                 # Preview archive eligibility
+worktree cleanup-archived --apply --json         # Retire and safely prune eligible tasks
+worktree cleanup-archived --apply --watch 1m     # Repeat until interrupted
+```
+
+Run the repeating command under your user service manager for automatic cleanup. The interval controls detection latency separately from the grace period: with `--watch 1m` and grace `0`, an archived task is considered within approximately one minute. Configuration and thread metadata are read again on every sweep. A metadata or configuration error stops the watcher with a nonzero exit; configure the service manager to restart on failure.
+
+The preview reports archive eligibility; `--apply` invokes the existing prune engine for its complete safety inspection and reports that result per task. An eligible task is finished and its manager-owned native lock released, even when pruning retains its files. Dirty files, valuable ignored artifacts, other active tasks, running processes, native locks owned by others, and unfinished Git operations retain the checkout. Recent commits and unmerged commits are allowed only under prune's existing rules; named branches and their commits remain available after removal. No branches are deleted and no files are force-discarded. Reopening an automatically retired chat restores its task-protection fence, including during ordinary prune. Do not downgrade the manager while archived tasks still require this fence; older versions do not understand the new `archive_retired` task field.
+
+Codex App also manages its own worktrees. This feature does not adopt or remove app-created worktrees or legacy checkouts without native manager task identity.

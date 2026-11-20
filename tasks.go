@@ -26,17 +26,18 @@ const (
 )
 
 type task struct {
-	ID         string     `json:"id"`
-	Agent      string     `json:"agent,omitempty"`
-	OwnerID    string     `json:"owner_id,omitempty"`
-	Common     gitText    `json:"common_gitdir"`
-	GitDir     gitText    `json:"gitdir"`
-	Path       gitText    `json:"path"`
-	Branch     gitText    `json:"branch"`
-	State      taskState  `json:"state"`
-	CreatedAt  time.Time  `json:"created_at"`
-	FinishedAt *time.Time `json:"finished_at,omitempty"`
-	Error      string     `json:"error,omitempty"`
+	ArchiveRetired bool       `json:"archive_retired,omitempty"`
+	ID             string     `json:"id"`
+	Agent          string     `json:"agent,omitempty"`
+	OwnerID        string     `json:"owner_id,omitempty"`
+	Common         gitText    `json:"common_gitdir"`
+	GitDir         gitText    `json:"gitdir"`
+	Path           gitText    `json:"path"`
+	Branch         gitText    `json:"branch"`
+	State          taskState  `json:"state"`
+	CreatedAt      time.Time  `json:"created_at"`
+	FinishedAt     *time.Time `json:"finished_at,omitempty"`
+	Error          string     `json:"error,omitempty"`
 }
 
 var taskIDPattern = regexp.MustCompile(`^[a-f0-9]{32}$`)
@@ -244,7 +245,7 @@ func (p *policy) activeAt(path string) (bool, error) {
 			return false, stateErr
 		}
 
-		if !protected {
+		if !protected && !t.ArchiveRetired {
 			continue
 		}
 
@@ -277,37 +278,55 @@ func (p *policy) activeAt(path string) (bool, error) {
 			inspected = true
 		}
 
-		if owner == t.ID || lockToken == "worktree-manager:"+t.ID {
+		related := owner == t.ID || lockToken == "worktree-manager:"+t.ID ||
+			(t.GitDir == "" && common == string(t.Common)) ||
+			(owner == "" && t.GitDir != "" && gitdir == string(t.GitDir))
+		if !related {
+			related, err = p.taskDescendantOf(t, path)
+			if err != nil {
+				return false, err
+			}
+		}
+
+		if !related {
+			continue
+		}
+
+		// Archive metadata can fail independently; consult it only for a task that can protect this path.
+		if t.ArchiveRetired && !protected {
+			protected, stateErr = p.archiveProtected(t)
+			if stateErr != nil {
+				return true, stateErr
+			}
+		}
+
+		if protected {
 			return true, nil
 		}
+	}
 
-		if t.GitDir == "" && common == string(t.Common) {
+	return false, nil
+}
+
+func (p *policy) taskDescendantOf(t task, path string) (bool, error) {
+	reports, err := p.taskReports([]task{t})
+	if err != nil {
+		return false, err
+	}
+
+	for _, report := range reports {
+		candidate := t.Path
+		if observed, valid := report["observed_path"].(gitText); valid {
+			candidate = observed
+		}
+
+		nested, pathErr := canonical(string(candidate))
+		if pathErr != nil {
+			return false, pathErr
+		}
+		// An ancestor removal deletes descendants too; unresolved tasks retain their recorded location conservatively.
+		if nested != path && within(nested, path) {
 			return true, nil
-		}
-
-		if owner == "" && t.GitDir != "" && gitdir == string(t.GitDir) {
-			return true, nil
-		}
-
-		reports, reportErr := p.taskReports([]task{t})
-		if reportErr != nil {
-			return false, reportErr
-		}
-
-		for _, report := range reports {
-			candidate := t.Path
-			if observed, valid := report["observed_path"].(gitText); valid {
-				candidate = observed
-			}
-
-			nested, pathErr := canonical(string(candidate))
-			if pathErr != nil {
-				return false, pathErr
-			}
-			// rationale: An ancestor removal deletes descendants too; unresolved tasks retain their recorded location conservatively.
-			if nested != path && within(nested, path) {
-				return true, nil
-			}
 		}
 	}
 

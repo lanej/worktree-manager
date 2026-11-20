@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -63,6 +64,33 @@ func show(command string, value any) error {
 	}
 
 	switch command {
+	case "cleanup-archived":
+		if _, err := fmt.Fprintf(os.Stdout, "Archive cleanup enabled: %v, applied: %v, complete: %v\n", object["enabled"], object["applied"], object["complete"]); err != nil {
+			return err
+		}
+
+		rows, ok := object["tasks"].([]any)
+		if !ok {
+			return errors.New("invalid archive cleanup tasks")
+		}
+
+		table := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
+		if _, err := fmt.Fprintln(table, "OUTCOME\tPATH\tERROR"); err != nil {
+			return err
+		}
+
+		for _, item := range rows {
+			row, valid := item.(map[string]any)
+			if !valid {
+				return errors.New("invalid archive cleanup task")
+			}
+
+			if _, err := fmt.Fprintf(table, "%s\t%s\t%s\n", printable(row["outcome"]), printable(row["path"]), printable(row["error"])); err != nil {
+				return err
+			}
+		}
+
+		return table.Flush()
 	case "create", "finish":
 		if _, err := fmt.Fprintf(os.Stdout, "Task %s: %s\nAgent: %s\nOwner: %s\nPath: %s\nBranch: %s\n", printable(object["id"]), printable(object["state"]), printable(object["agent"]), printable(object["owner_id"]), printable(object["path"]), printable(object["branch"])); err != nil {
 			return err
