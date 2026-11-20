@@ -399,7 +399,7 @@ func entry() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	p := &policy{ctx: ctx}
+	p := &policy{ctx: ctx, archiveSessions: codexSQLiteSessionRepository{}}
 
 	status, err := p.app(os.Args[1:])
 	machine := len(os.Args) > 1 && (contains(os.Args[2:], "--json") || (currentCaller().detected && (os.Args[1] == "create" || os.Args[1] == "finish")))

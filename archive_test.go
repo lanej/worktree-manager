@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -41,4 +45,29 @@ func TestArchiveClock(t *testing.T) {
 	if archiveEligible(candidate, sessions, now, 0) {
 		t.Fatal("unknown archive time must retain protection")
 	}
+}
+
+// A failed repository read must stop cleanup before any task is considered eligible.
+func TestArchiveRepositoryFailure(t *testing.T) {
+	root := t.TempDir()
+
+	config := filepath.Join(root, "config.json")
+	if err := os.WriteFile(config, []byte(`{"archive_cleanup":{"enabled":true,"grace_period":"0"}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Setenv("WORKTREE_CONFIG", config)
+
+	unavailable := errors.New("session repository unavailable")
+
+	p := &policy{ctx: t.Context(), archiveSessions: unavailableArchiveSessionRepository{err: unavailable}}
+	if err := p.archiveSweep(true, true); !errors.Is(err, unavailable) {
+		t.Fatalf("repository failure was not preserved: %v", err)
+	}
+}
+
+type unavailableArchiveSessionRepository struct{ err error }
+
+func (repository unavailableArchiveSessionRepository) List(context.Context) ([]archivedSession, error) {
+	return nil, repository.err
 }

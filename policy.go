@@ -33,10 +33,11 @@ type inventory struct {
 	Worktrees   []map[string]any `json:"worktrees"`
 }
 type policy struct {
-	archiveTaskID string
-	reported      bool
-	localEnv      []string
-	ctx           context.Context
+	archiveSessions archiveSessionRepository
+	archiveTaskID   string
+	reported        bool
+	localEnv        []string
+	ctx             context.Context
 }
 
 func (p *policy) command(directory string, args ...string) ([]byte, error) {
