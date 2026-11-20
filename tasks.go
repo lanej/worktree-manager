@@ -26,17 +26,18 @@ const (
 )
 
 type task struct {
-	ID         string     `json:"id"`
-	Agent      string     `json:"agent,omitempty"`
-	OwnerID    string     `json:"owner_id,omitempty"`
-	Common     gitText    `json:"common_gitdir"`
-	GitDir     gitText    `json:"gitdir"`
-	Path       gitText    `json:"path"`
-	Branch     gitText    `json:"branch"`
-	State      taskState  `json:"state"`
-	CreatedAt  time.Time  `json:"created_at"`
-	FinishedAt *time.Time `json:"finished_at,omitempty"`
-	Error      string     `json:"error,omitempty"`
+	ArchiveRetired bool       `json:"archive_retired,omitempty"`
+	ID             string     `json:"id"`
+	Agent          string     `json:"agent,omitempty"`
+	OwnerID        string     `json:"owner_id,omitempty"`
+	Common         gitText    `json:"common_gitdir"`
+	GitDir         gitText    `json:"gitdir"`
+	Path           gitText    `json:"path"`
+	Branch         gitText    `json:"branch"`
+	State          taskState  `json:"state"`
+	CreatedAt      time.Time  `json:"created_at"`
+	FinishedAt     *time.Time `json:"finished_at,omitempty"`
+	Error          string     `json:"error,omitempty"`
 }
 
 var taskIDPattern = regexp.MustCompile(`^[a-f0-9]{32}$`)
@@ -242,6 +243,13 @@ func (p *policy) activeAt(path string) (bool, error) {
 		protected, stateErr := t.protected()
 		if stateErr != nil {
 			return false, stateErr
+		}
+
+		if t.ArchiveRetired && !protected {
+			protected, stateErr = p.archiveProtected(t)
+			if stateErr != nil {
+				return true, stateErr
+			}
 		}
 
 		if !protected {

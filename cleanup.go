@@ -20,7 +20,8 @@ import (
 var cleanupEngine []byte
 
 type settings struct {
-	RecoveryAllowedGitHubOwners []string `json:"recovery_allowed_github_owners"`
+	ArchiveCleanup              archiveSettings `json:"archive_cleanup"`
+	RecoveryAllowedGitHubOwners []string        `json:"recovery_allowed_github_owners"`
 }
 
 var (
@@ -66,6 +67,10 @@ func readSettings() (settings, error) {
 		if !ownerPattern.MatchString(owner) {
 			return settings{}, fmt.Errorf("invalid approved GitHub owner: %q", owner)
 		}
+	}
+
+	if _, err := archiveGrace(config.ArchiveCleanup); err != nil {
+		return settings{}, err
 	}
 
 	return config, nil
@@ -128,6 +133,10 @@ func (p *policy) runCleanup(request cleanupRequest) (result cleanupResult, resul
 		if !strings.HasPrefix(key, "WORKTREE_MANAGER_") && key != "TMPDIR" {
 			filtered = append(filtered, value)
 		}
+	}
+
+	if p.archiveTaskID != "" {
+		filtered = append(filtered, "WORKTREE_MANAGER_ARCHIVE_TASK="+p.archiveTaskID)
 	}
 
 	filtered = append(filtered, "WORKTREE_MANAGER_EXECUTABLE="+executable, "TMPDIR="+stage)

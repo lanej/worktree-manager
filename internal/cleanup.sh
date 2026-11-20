@@ -1294,6 +1294,13 @@ for (( i=0; i<${#to_remove[@]}; i++ )); do
         errors=$(( errors + 1 ))
         continue
     fi
+    # Archive sweeps additionally pin the exact task registration after activity checks.
+    if [[ -n ${WORKTREE_MANAGER_ARCHIVE_TASK:-} ]] \
+        && ! "$WORKTREE_MANAGER_EXECUTABLE" internal-task-check "$path"; then
+        echo "Retaining $path: archive identity or protection changed" >&2
+        errors=$(( errors + 1 ))
+        continue
+    fi
     remove_options=()
     if [[ "$ACCEPT_DIRTY" -eq 1 ]]; then
         remove_options+=(--force)

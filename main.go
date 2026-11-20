@@ -77,6 +77,7 @@ Usage: worktree COMMAND [OPTIONS]
   finish TASK_ID|PATH [--json] [--verbose]  Finish protection; never delete
   backfill ROOT... [--json]          Discover existing repositories explicitly
   status [--json]                    Reconcile all known repositories and tasks
+  cleanup-archived [--apply] [--json] [--watch 1m]  Configured Codex archive cleanup
   prune [OPTIONS] [ROOT]             Preview; --apply/-y explicitly removes
   prune --all [OPTIONS]              Inspect all known repositories
   limits [--global] [--max-worktrees N|off] [--max-bytes SIZE|off]
@@ -118,9 +119,27 @@ Codex session reporting uses optional sqlite3. No Python or Go installation need
 		return p.run(rest)
 	case "internal-cleanup-json":
 		return 0, cleanupJSON(rest)
+	case "internal-archive-prune":
+		if len(rest) != 2 {
+			return 2, errors.New("expected task ID and checkout path")
+		}
+
+		if err := p.archiveIdentity(rest[0], rest[1]); err != nil {
+			return 1, err
+		}
+
+		p.archiveTaskID = rest[0]
+
+		return p.prune([]string{"--worktree", rest[1], "--accept-recent", "--accept-unmerged", "--apply", "--json"})
 	case "internal-task-check":
 		if len(rest) != 1 {
 			return 2, errors.New("expected checkout path")
+		}
+
+		if id := os.Getenv("WORKTREE_MANAGER_ARCHIVE_TASK"); id != "" {
+			if err := p.archiveIdentity(id, rest[0]); err != nil {
+				return 2, err
+			}
 		}
 
 		active, err := p.activeAt(rest[0])
@@ -150,6 +169,8 @@ Codex session reporting uses optional sqlite3. No Python or Go installation need
 		return 1, nil
 	case "legacy-cleanup":
 		return p.cleanup(rest, false, false)
+	case "cleanup-archived":
+		return p.archiveCommand(rest)
 	case "prune":
 		return p.prune(rest)
 	case "create":
