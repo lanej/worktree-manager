@@ -49,9 +49,31 @@ func TestArchiveCleanup(t *testing.T) {
 		t.Fatalf("lost dirty work: %q %v", data, err)
 	}
 
+	// Missing archive metadata must retain this task and ancestors, while other checkouts remain eligible.
+	unrelatedRepo := filepath.Join(f.root, "unrelated-repo")
+	unrelatedPath := filepath.Join(f.root, "unrelated-checkout")
+	f.mkdir(unrelatedRepo)
+	f.gitAt(unrelatedRepo, "init", "-q", "--initial-branch=main")
+	f.gitAt(unrelatedRepo, "commit", "--allow-empty", "-qm", "initial")
+	f.gitAt(unrelatedRepo, "worktree", "add", "-qb", "unrelated", unrelatedPath, "main")
+	siblingPath := filepath.Join(f.repo, ".worktrees", "unrelated-sibling")
+	f.git("worktree", "add", "-qb", "unrelated-sibling", siblingPath, "main")
+	f.run(f.binary, "internal-task-check", unrelatedPath)
+	f.run(f.binary, "internal-task-check", siblingPath)
 	f.run("sqlite3", database, "ALTER TABLE threads RENAME TO unavailable;")
 	f.fail(f.binary, "cleanup-archived", "--apply", "--json")
 	f.fail(f.binary, "internal-task-check", path)
+	f.fail(f.binary, "internal-task-check", f.repo)
+
+	for _, candidate := range []string{unrelatedPath, siblingPath} {
+		f.run(f.binary, "internal-task-check", candidate)
+		f.run(f.binary, "prune", "--worktree", candidate, "--apply", "--json")
+
+		if _, err := os.Lstat(candidate); !os.IsNotExist(err) {
+			t.Fatalf("unrelated checkout was not pruned: %s: %v", candidate, err)
+		}
+	}
+
 	f.run("sqlite3", database, "ALTER TABLE unavailable RENAME TO threads;")
 	f.run("sqlite3", database, "UPDATE threads SET archived=0;")
 	f.fail(f.binary, "internal-task-check", path)
