@@ -236,6 +236,27 @@ Document exceptions near the affected contract or decision using:
 Exceptions to defaults explain the alternative technique.
 Exceptions preventing a required property remain explicit compliance gaps, not equivalent compliance.
 
-## Executable project checks
+## Executable reference examples
 
-The repository's [Go acceptance checks](../../../../internal/acceptance) exercise allocation, ownership, uncertain outcomes, native installation, hooks, cleanup, and recovery against real Git repositories. Run `scripts/test.sh`. Checks use isolated fixture directories and preserve the evidence required to challenge consequential outcomes. A passing fixture does not establish a live provider's behavior or prove future solutions correct.
+Run `python3 ../scripts/check_examples.py` from this directory.
+The runner exercises baseline behavior and isolated controlled defects.
+
+- [Pure decision](../scripts/decisions.py): quotes expire at the supplied instant, including equality.
+  An independently specified expected selection challenges the consequential boundary condition.
+- [External operation](../scripts/operations.py): a provider commits, then the request times out.
+  The caller preserves an unknown outcome and correlation identity; reconciliation establishes completion later.
+  Treating that timeout as confirmed success or failure asserts unsupported knowledge.
+- [Small utility](../scripts/utility.py): unique input lines retain their first occurrence and ordering.
+  Whitespace and blank lines remain meaningful; line endings normalize to LF.
+  Invalid UTF-8 reports an error with exit status 2 and no output.
+  Standard input, output, and a direct transformation suffice without extra architectural layers.
+- **Tidy counterexample:** the operations example includes a layered, lossy adapter.
+  It collapses rejection and unknown observations into an empty canonical tuple, then publishes a complete report.
+  The report loses source distinctions and provenance needed to challenge its market conclusion.
+  Its tidy structure does not satisfy PHA-P03, PHA-P04, or PHA-P06.
+
+The [runner](../scripts/check_examples.py) introduces controlled defects in isolated example execution.
+It changes expiry equality and collapses timeout uncertainty.
+Relevant detectors must fail for the intended assertion, while baseline behavior passes.
+These experiments challenge the detectors' sensitivity to those specific defects.
+They do not validate a real provider, prove future solutions correct, or establish universal architectural effectiveness.

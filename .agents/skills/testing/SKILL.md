@@ -1,23 +1,34 @@
 ---
 name: testing
-description: Use when selecting, writing, running, or reviewing software verification in a project with an installed source-code lifecycle policy.
+description: Use when selecting, writing, running, or reviewing verification for a beta project. Apply minimum effective testing for its current maturity and preserve repository gates.
 ---
 
-# Testing
+# Testing: beta
 
-Read the project policy through [source-code lifecycle](../source-code-lifecycle/SKILL.md). Preserve existing project gates. Select the smallest real check that can expose a defect; scale evidence with the selected stage, consequences, and uncertainty.
+## Broaden behavior and important failures
 
-- **Research:** Compile/typecheck and exercise the experiment against the relevant real boundary. Preserve findings and limits. Discarded experiments need no permanent suite; retained consequential results need reproducible evidence.
-- **Alpha:** Protect retained steel-thread behavior and consequential failures. Favor focused checks through the real entrypoint; add unit tests when stable decisions benefit from isolation. Avoid speculative harnesses and coverage quotas.
-- **Beta:** Run the full language profile. Verify affected integrations and compatibility or migration behavior against independent expectations. Preserve counterexamples in existing regression checks where practical.
-- **Production:** Add independent review and relevant recovery, rollout, and operational evidence. State which requirements automation establishes and which need manual or external observation. Do not claim measured reliability from a stage label.
+Broaden happy-path coverage across the behavior people are adopting. Deliberately exercise important errors, boundaries, and integration failures, choosing cases by consequence and uncertainty. Protect compatibility and migrations where changes affect existing users or data; verify real integration behavior at affected boundaries.
 
-Run `scripts/check-source-code.sh go` for the stage-selected native Go gate and `scripts/test.sh` for real-entrypoint acceptance checks. The strict lint pass includes integration-tagged test code. A failing or unavailable required check is a failure or limitation to resolve or report; do not silently skip it. Run affected checks after relevant changes, then broaden only when consequences or unresolved interactions justify it.
+Run the full applicable language profile and preserve existing repository gates. Use independent expected outcomes and real counterexamples. Avoid mechanically enumerating every branch or multiplying equivalent cases; each addition should improve confidence enough to justify its execution, diagnosis, and maintenance cost.
 
-TDD is optional unless the project requires it. Protect meaningful retained behavior before substantial expansion. Tests must admit contradictory evidence; copying the production algorithm or asserting source strings cannot establish correctness. Use controlled external commands when testing orchestration; real compatibility claims require real integrations. Distinguish observed legacy behavior from intended behavior and mocked boundaries from live outcomes.
+## Minimum effective testing
 
-Use independent review for complex interactions, state transitions, security-sensitive logic, or material uncertainty at every stage. Simple mechanically verifiable changes need no review dispatch. Assess hosted CI separately from local checks. Give reviewers the changed capability, relevant constraints, and actionable findings; have material fixes reviewed again. Reviewers must not recursively dispatch reviews.
+Optimize the full iteration cycle: implementation, test execution, failure diagnosis, review, maintenance, and rework. Choose the smallest set of checks that provides useful confidence in the current change. Each test should earn its reading and maintenance cost; neither test count nor coverage percentage determines adequacy. Preserve repository requirements and retained behavior.
 
-During detector sensitivity checks, modify only task-owned inputs and restore only the known mutation; do not use Git checkout/restore or leave the target directory. Do not use a shared stash for baseline checks. Read the project's Git verification reference when assigning evidence tiers or recording the detector that caught a fault.
+Protect observable outcomes through the real entrypoint where practical. Prefer a focused existing detector over another harness. Add unit checks for decisions that benefit from isolation; exercise real boundaries when compatibility or integration is the claim. Test doubles can protect orchestration but cannot establish that a real integration works. Scale coverage to the selected maturity, consequences, and uncertainty. TDD is optional unless the project requires it.
 
-Read [software verification lessons](references/verification-lessons.md) for detector sensitivity checks, delegated implementation evidence, integration wiring, or browser verification after a rebuild.
+Failures must explain what went wrong in CLI output: the operation or case, expected value, actual value, and a useful diff or relevant context. Prefer expressive comparisons, assertion APIs, and richer testing libraries that provide these diagnostics. Use the existing framework's native diagnostics when sufficient; do not add a dependency merely for syntax. Avoid opaque boolean wrappers that discard expected/actual details. Diagnostic clarity matters for humans and agents, especially in unattended CI.
+
+Run the affected checks after relevant changes. Broaden verification when a changed boundary, failure, or unresolved interaction justifies it. Do not repeat passing checks without a reason, mirror production logic in the oracle, or test private structure when an outcome suffices. Meaningful defects and independent expectations should drive assertions. Preserve useful counterexamples in the existing detector.
+
+Optimize local verification for iteration speed. Avoid lengthy local test runs during the edit-and-check loop. Start with the smallest affected check that can expose the defect or verify the change, then run related tests while keeping selection tied to the changed behavior and its dependencies. Let CI run the full suite by default. Broaden local runs only for a concrete failure, risk, explicit project gate, or unavailable CI, and choose the narrowest scope that resolves the concern. Once relevant checks pass, rerun them only after a relevant edit or when new evidence requires it.
+
+Keep local test timeouts tight for fast feedback, and allow longer timeouts in remote environments such as CI to resist flakes from slower runners and contention. Choose deadlines from the operation's expected duration and observed variability. For example, a fast operation might allow one second locally and thirty seconds in CI; these are illustrative values, not universal defaults. Do not lengthen timeouts to mask failures. Distinguish an operation's deadline from the total duration of a multi-step suite, and keep test deadlines separate from product timeouts.
+
+Required current-stage profiles still apply at delivery; targeted local passes do not establish a full CI pass. Preserve explicit repository gates and their required execution locations.
+
+Keep unavailable checks, mocked boundaries, local results, hosted CI, and real external observations distinct. A failed required check remains a failure or explicit limitation. Obtain independent review for complex interactions, concurrency, migrations, security-sensitive logic, or material uncertainty; simple mechanically verifiable edits need no separate dispatch. Reviewers do not recurse. Reassess material fixes and changed evidence.
+
+Establish a new detector's sensitivity once with a task-owned input and restore only that mutation. Do not reset someone else's changes, use a shared stash, or mutate unrelated source. Read [verification lessons](references/verification-lessons.md) when designing sensitivity checks, accepting delegated evidence, or verifying integrations. Avoid redundant tests and speculative infrastructure that slow future changes without adding useful confidence.
+
+For installed generated language profiles, run `python3 scripts/check-source-code.py LANGUAGE` for the configured gate. Use existing repository commands and the applicable language guidance otherwise. Run affected checks after relevant changes and distinguish local evidence from hosted and external outcomes.

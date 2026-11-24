@@ -38,7 +38,8 @@ func commandPlan(policyData, rulesData []byte) (string, [][]string, error) {
 		return "", nil, errors.New("unsupported source-code schema version")
 	}
 
-	if policy.PolicyVersion != "1.0.0" || rules.PolicyVersion != policy.PolicyVersion {
+	supportedPolicy := policy.PolicyVersion == "1.0.0" || policy.PolicyVersion == "1.1.0"
+	if !supportedPolicy || rules.PolicyVersion != policy.PolicyVersion {
 		return "", nil, errors.New("unsupported or mismatched source-code policy version")
 	}
 

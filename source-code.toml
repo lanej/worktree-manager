@@ -16,3 +16,33 @@ enabled = false
 
 [checks.python]
 enabled = false
+
+[installed]
+version = 1
+mode = "tracked"
+skill_storage = "copied"
+go_profile = true
+authority = "owned"
+adoption = "hold"
+stage = "beta"
+policy_version = "1.1.0"
+skills = ["architecture", "builder", "cli", "code-comments", "data-change-planning", "git", "go", "library-code-comments", "pull-request", "ship", "source-code-lifecycle", "testing"]
+agents = "codex"
+pr_template = "none"
+kind = "tool"
+detect_languages = false
+go_rollout = "strict"
+
+[installed.skill_versions]
+architecture = "1.2.3"
+builder = "1.1.2"
+cli = "1.0.1"
+code-comments = "1.1.2"
+data-change-planning = "1.0.0"
+git = "1.1.0"
+go = "1.1.5"
+library-code-comments = "1.0.1"
+pull-request = "1.0.0"
+ship = "1.0.0"
+source-code-lifecycle = "1.2.6"
+testing = "1.1.3"

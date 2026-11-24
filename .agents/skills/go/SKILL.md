@@ -1,29 +1,45 @@
 ---
 name: go
-description: Use when creating, modifying, testing, or reviewing Go code. Apply the portable Go correctness profile with exhaustive enums and sum types, strict error handling, security analysis, race tests, and vulnerability checks; preserve repository-specific policy.
+description: "Use when creating, modifying, testing, or reviewing Go code. Apply Go correctness guidance and the selected lifecycle checks; preserve repository-specific requirements. Apply the selected beta expectations."
 ---
 
-# Go
+# go: beta
 
-Read the project’s stage through [source-code lifecycle](../source-code-lifecycle/SKILL.md). When `go` is listed in the project policy’s `languages`, run `scripts/check-source-code.sh go` for its native gate. Otherwise follow existing repository checks; detected language guidance alone does not install a check profile. Full profile commands below remain available when that profile is installed. Research and alpha use the selected stage’s checks while preserving existing repository gates.
+Protect supported behavior, affected integrations, and compatibility. Use independent expected outcomes and migration checks where relevant.
+
+## Verification
+
+Run `python3 scripts/check-source-code.py go` for the installed lifecycle gate. The selected stage entrypoint controls required checks; standalone modes describe available tools and do not add another stage’s gates. Preserve stronger repository requirements. Missing tools and failed checks require resolution or a reported limit, never a silent skip.
+
+The runner supports `lint`, `fmt` with explicit paths, `fix` for scoped cuddling repairs, `test`, and `vuln`. Inspect source-writing changes. Pinned tools are cached outside the project, and the linter release checksum is verified. Initial tool setup and vulnerability analysis need network access. Keep tool dependencies out of the application’s `go.mod`.
+
+The supplied runner covers one root module on its host platform. Adapt checks to actual nested modules, workspaces, build tags, platform-specific code, and native dependencies. Read [the correctness guide](references/correctness.md) when adopting, tuning, or explaining the profile.
+
+## Enforcement: strict
+
+All findings from checks required by the selected stage must pass without grandfathered diagnostic allowances. Fix findings at their cause; do not create a baseline to unblock a feature. Preserve the original project gate and merged strict policy. Change rollout only through an explicitly scoped configuration task.
+
+## Go
+
+Before selecting application tools or an API protocol, read [the installed project policy](../source-code-lifecycle/SKILL.md). Apply the declared authority and adoption at the configured maturity; preserve external providers’ protocols and established stacks according to that policy.
+
+Follow the verification commands and enforcement in this skill’s installed entrypoint. Preserve existing repository checks.
 
 For comment decisions, read the [shared comment guidance](../code-comments/SKILL.md). For public library APIs, also read the [library comment guidance](../library-code-comments/SKILL.md). Bootstrap bundles both with this skill in tracked or local mode; apply the library perspective only to library work and preserve project requirements.
 
-Use the repository’s required Go checks early and before handoff. This project owns native Go and shell runners with a whole-project strict lint policy. Read [the verification instructions](references/correctness.md) before changing them. Commit the checks and policy so other machines and CI use the same protections.
+### API client generation
 
-Preserve and extend existing project checks; reconcile an existing configuration instead of replacing or weakening it. For nested modules, workspaces, build tags, platform-specific code, or native dependencies, adapt the checks and CI matrix to the actual build surfaces. The supplied runner covers one root module on its host platform. Run relevant extra configurations explicitly.
+For Go client generation from OpenAPI-described JSON APIs, prefer [Ogen](https://ogen.dev/). Source the authoritative OpenAPI specification, whether encoded as JSON or YAML, and pin the generator version. JSON samples or a standalone JSON Schema do not supply the full HTTP contract; establish the missing operations and protocol semantics before generation. Document a concrete compatibility constraint and a revisit condition when selecting another generator. Preserve established project tools unless a migration is authorized.
 
-## Correctness checks
+### Correctness
 
-Run `bash scripts/check-go.sh lint` during implementation, `bash scripts/check-go.sh fmt path/to/file.go` to apply formatting, and the selected lifecycle gate before delivery. Use `fix ./path/to/package` for available cuddling fixes and review their diff. At beta and production, the lifecycle gate runs the full profile: formatting, module tidiness, strict lint, uncached race tests, and reachable-vulnerability analysis. `test` and `vuln` modes isolate failures. Read [the correctness guide](references/correctness.md) when adopting, tuning, or explaining the profile.
-
-The runner caches pinned tools outside the project, verifies the linter release checksum, and keeps tool dependencies out of the application's `go.mod`. Initial setup and vulnerability analysis need network access. Missing tools, unavailable dependencies, or failed checks are failures to resolve or report; never silently skip a gate. Preserve all findings for batch repairs. This repository has no grandfathered baseline. Never use changed-line filters, blanket exclusions, or omitted tests to silence findings. New file paths are strict; analysis still checks unchanged consumers affected by a new enum value.
+Fix findings at their cause. Use only narrowly scoped suppressions with the named linter and a concrete rationale. Static analysis and passing tests do not prove domain correctness or cover unexecuted race paths.
 
 Use a named type and typed constants for simple enums. Give zero an intentional meaning or treat it as invalid. Handle every declared value explicitly in switches and enum-keyed maps; a `default` branch must not substitute for a missing declared case. Handle out-of-set values at runtime too: `State(99)` can still compile. For variants carrying different data, use an interface marked `//sumtype:decl` with an unexported marker method and concrete variants; require exhaustive type switches with `gochecksumtype`.
 
 Fix findings at their cause. Use only narrowly scoped suppressions with the named linter and a concrete rationale, including intentional partial enum maps. Do not blanket-disable rules or loosen checks merely to obtain green output. Static analysis and passing tests cannot prove domain correctness or cover unexecuted race paths; retain independent behavioral expectations and meaningful tests.
 
-## Use `gotestsum`, not bare `go test`
+### Use `gotestsum`, not bare `go test`
 
 `gotestsum` wraps `go test` with readable, colorized output and failure re-runs. Fall back to
 `go test` only if it isn't installed.
@@ -40,7 +56,9 @@ gotestsum --junitfile=junit.xml ./...   # CI
 `--rerun-fails` is for *diagnosing* a flake, not for making CI green. A test that only passes on
 re-run is a bug to fix.
 
-## Existing projects without the profile
+### Existing repository checks
+
+These examples describe available Go tools; use the installed profile selector and repository requirements to choose required commands.
 
 ```bash
 gofmt -l .          # inspect output; this command alone does not fail on differences
@@ -50,34 +68,10 @@ gotestsum -- -race ./...
 
 Treat unformatted output as a failed check. Run the project's existing linter and security checks as well. The fallback above does not provide exhaustive-match enforcement; adopt the profile or reconcile equivalent checks before claiming those protections.
 
-## Coverage
+### Coverage
 
 ```bash
 go test -coverprofile=cover.out ./... && go tool cover -html=cover.out
 ```
 
-## Stale gopls/LSP Diagnostics After a Concurrent Write
-
-An editor/LSP diagnostic reporting `undefined: <Symbol>` or a similar compile error right after your
-own edit, a dispatched sub-agent's commit, or a peer session's commit just defined that symbol is
-frequently a stale gopls index, not a real error — gopls doesn't reliably invalidate its package
-index the instant another process writes and commits new Go source. Recurring pattern, confirmed 7+
-times in one session (`fraud-detector`, 2026-09-26).
-
-**Fix:** Check with the actual compiler before treating the diagnostic as real. Go's build and test caches are content-addressed; `(cached)` is not itself evidence that a changed source tree was ignored. Use an uncached test run when resolving uncertainty:
-```bash
-go build ./...
-go test ./... -count=1     # -count=1 disables test result caching
-```
-If both pass, investigate editor state rather than rewriting valid code. If the compiler reproduces the failure, fix it.
-
-## Environment
-
-```bash
-CGO_ENABLED=0                          # static binaries; required for scratch/distroless images
-GOOS=linux GOARCH=amd64                # cross-compile
-GOPRIVATE=github.com/myorg/*           # skip the proxy and checksum DB for private modules
-```
-
-`GOPRIVATE` is the usual fix when `go mod download` 404s or fails checksum verification on an
-internal repository.
+Read [troubleshooting](references/troubleshooting.md) when investigating stale editor diagnostics or environment settings.

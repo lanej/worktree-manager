@@ -1,11 +1,17 @@
 ---
 name: code-comments
-description: Use when deciding whether to add a source comment, writing or revising comments, or reviewing comment quality. Apply the conventional code comment specification. Excludes PR discussion comments and general prose editing.
+description: "Use when deciding whether to add a source comment, writing or revising comments, or reviewing comment quality. Apply the conventional code comment specification. Excludes PR discussion comments and general prose editing. Apply the selected beta expectations."
 ---
 
-# Code Comments
+# code-comments: beta
 
-Read the project’s stage through [source-code lifecycle](../source-code-lifecycle/SKILL.md). In research, explain assumptions and consequential interactions without documenting speculative APIs. In alpha, document caller information needed for retained behavior and mark provisional contracts. In beta and production, maintain public contracts, constraints, failure outcomes, and useful examples. Preserve explicit documentation requirements at every stage.
+Maintain supported public contracts, inputs and outputs, consequential interactions, failure outcomes, compatibility expectations, and useful examples where they help callers.
+
+Apply the library caller perspective to public library APIs within the authored project or task scope.
+
+## Code Comments
+
+Preserve explicit documentation requirements and follow the selected comment-depth guidance.
 
 Use this guide for routine comment edits and reviews:
 
