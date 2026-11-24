@@ -1,14 +1,28 @@
 ---
 name: source-code-lifecycle
-description: Use when working in a project installed by source-code setup, selecting its research, alpha, beta, or production expectations, or changing its lifecycle stage.
+description: Use when applying installed project policy for project kind, tool choices, authority, or adoption.
 ---
 
-# Source-code lifecycle
+# Installed project policy
 
-Read the project's `.source-code.json` before selecting engineering effort. It records `schema_version`, `policy_version`, `stage`, installed `languages`, pinned skill versions, optional project `kind`, and language-detection evidence. Detection selects guidance; `languages` separately identifies installed language checks. Read `AGENTS.override.md` for the generated project routing and version summary, preserving the existing `AGENTS.md`. Read [the lifecycle contract](references/lifecycle.md) for stage expectations, transitions, and limits. If the project has no policy, preserve existing requirements; do not infer a lower stage from apparent immaturity.
+## Project kind: tool
 
-When the policy selects a `kind`, read [project kind guidance](references/kinds.md) for service, library, or tool obligations. Kind is explicit and independent of stage; do not infer it or use it to prescribe architecture.
+Define invocation, inputs and outputs, diagnostics, failure outcomes, and installation requirements for people and automation. For CLIs, read [CLI construction](../cli/SKILL.md), including progressive `skill` / `skill --topic` discovery, meaningful exit codes, and machine-readable output contracts. For interactive tools, cover actual interaction and recovery paths.
 
-Apply the selected stage consistently across [Builder](../builder/SKILL.md), [testing](../testing/SKILL.md), [comments](../code-comments/SKILL.md), and installed language guidance. Run `scripts/check-source-code.sh go` locally and in CI for the selected stage's native Go gate. Explicit project gates remain binding at every stage.
+Use the installed testing, comment, and language guidance to choose the depth of evidence and documentation. Preserve authored project and directory scope; kind alone does not prescribe architecture or add runtime gates.
 
-Use `source-code validate` for structural package and pin checks, and `source-code upgrade --dry-run` to preview releases from the installed command’s source checkout while preserving project selections. Change the stage through `source-code setup --stage STAGE --dry-run`, review the added or relaxed obligations, then apply it. A stage is the project's chosen assurance level, not proof of readiness or a release version. A policy version identifies the rules; a source revision and file fingerprints identify installed contents. Four-nines reliability requires a separately defined and measured service objective.
+## Authority: owned
+
+The project controls tools for its owned surfaces, subject to the selected adoption policy and authored project requirements. Owning a client does not authorize redesigning an external provider’s protocol.
+
+Apply authority and adoption together. Authority is independent of lifecycle stage, project kind, and public visibility; it does not grant publication or migration authority beyond the task.
+
+## Tool adoption: hold
+
+Preserve the established stack, including extensions to existing surfaces. Do not use the application tool catalog to introduce a competing stack. For an unestablished capability, obtain a project choice before selecting a stack. Do not load the catalog merely to perform ordinary work on the retained stack.
+
+Apply authority and adoption together. Adoption does not establish project agreement or waive repository requirements.
+
+Preserve authored repository requirements. Use the installed testing, comment, and language skills for the work they cover. Apply the authority and adoption policy above when choosing application libraries, API protocols, or migration scope.
+
+For CLI work, use [CLI construction](../cli/SKILL.md) for language tools and command discovery. Use the installed `data-pipeline` or `ui-acceptance` skill when the task calls for it. Those skills are selected explicitly during setup.

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +21,8 @@ func TestCommandPlan(t *testing.T) {
 		valid               bool
 	}{
 		{"beta", policy, rules, true},
+		{"current policy", strings.ReplaceAll(policy, "1.0.0", "1.1.0"), strings.ReplaceAll(rules, "1.0.0", "1.1.0"), true},
+		{"mismatched policy", strings.ReplaceAll(policy, "1.0.0", "1.1.0"), rules, false},
 		{"malformed policy", `{`, rules, false},
 		{"malformed rules", policy, `{`, false},
 		{"schema", `{"schema_version":2,"policy_version":"1.0.0","stage":"beta","languages":["go"]}`, rules, false},
@@ -50,7 +53,7 @@ func TestLifecycleExecution(t *testing.T) {
 	root := t.TempDir()
 	t.Chdir(root)
 
-	if err := os.WriteFile(".source-code.json", []byte(`{"schema_version":1,"policy_version":"1.0.0","stage":"beta","languages":["go"]}`), 0o600); err != nil {
+	if err := os.WriteFile(".source-code.json", []byte(`{"schema_version":1,"policy_version":"1.1.0","stage":"beta","languages":["go"]}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -59,7 +62,7 @@ func TestLifecycleExecution(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := json.Marshal(lifecycleRules{SchemaVersion: 1, PolicyVersion: "1.0.0", Stages: map[string]map[string][][]string{"beta": {"go": {{"/bin/sh", "-c", "exit 7"}}}}})
+	data, err := json.Marshal(lifecycleRules{SchemaVersion: 1, PolicyVersion: "1.1.0", Stages: map[string]map[string][][]string{"beta": {"go": {{"/bin/sh", "-c", "exit 7"}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
